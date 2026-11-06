@@ -1,5 +1,9 @@
-import Image from "next/image";
+import { redirect } from "next/navigation";
 
-export default function Home() {
-  return <div>hello world alif ganteng peppepe</div>;
+/**
+ * Root page — immediately redirects to /login.
+ * The proxy (proxy.ts) will further redirect authenticated users to /dashboard.
+ */
+export default function RootPage() {
+  redirect("/login");
 }
