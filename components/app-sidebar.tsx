@@ -66,8 +66,8 @@ const navGroups = [
   {
     label: "Pembayaran",
     items: [
-      { title: "Pembayaran Pemasok", href: "/pembayaran-pemasok", icon: CreditCard },
-      { title: "Penerimaan Pelanggan", href: "/penerimaan-pelanggan", icon: Banknote },
+      { title: "Manajemen Utang", href: "/pembayaran-pemasok", icon: CreditCard },
+      { title: "Manajemen Piutang", href: "/penerimaan-pelanggan", icon: Banknote },
     ],
   },
   {

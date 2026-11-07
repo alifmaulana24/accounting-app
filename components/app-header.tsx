@@ -12,6 +12,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -19,7 +20,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
 import { LogOut, User } from "lucide-react";
 
 const routeTitles: Record<string, string> = {
@@ -30,8 +30,8 @@ const routeTitles: Record<string, string> = {
   "/pembelian": "Pembelian",
   "/penjualan": "Penjualan",
   "/inventory": "Inventory",
-  "/pembayaran-pemasok": "Pembayaran Pemasok",
-  "/penerimaan-pelanggan": "Penerimaan Pelanggan",
+  "/pembayaran-pemasok": "Manajemen Utang",
+  "/penerimaan-pelanggan": "Manajemen Piutang",
   "/daftar-akun": "Daftar Akun",
   "/jurnal-umum": "Jurnal Umum",
   "/buku-besar": "Buku Besar",
@@ -86,10 +86,12 @@ export function AppHeader({ pageTitle, userId }: AppHeaderProps) {
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel className="flex items-center gap-2 font-normal">
-            <User className="size-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-foreground">{userId}</span>
-          </DropdownMenuLabel>
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="flex items-center gap-2 font-normal">
+              <User className="size-4 text-muted-foreground" />
+              <span className="text-sm font-medium text-foreground">{userId}</span>
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
@@ -102,19 +104,6 @@ export function AppHeader({ pageTitle, userId }: AppHeaderProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* Quick logout button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        disabled={isPending}
-        onClick={handleLogout}
-        className="hidden sm:inline-flex gap-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-        title="Logout dari akun"
-      >
-        <LogOut className="size-4" />
-        <span className="text-xs">{isPending ? "Keluar..." : "Logout"}</span>
-      </Button>
     </header>
   );
 }
