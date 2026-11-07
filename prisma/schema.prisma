@@ -11,3 +11,18 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+
+model Product {
+  sku       String   @id @db.VarChar(50)
+  name      String   @db.VarChar(255)
+  category  String   @db.VarChar(100)
+  brand     String?  @db.VarChar(100)
+  unit      String   @db.VarChar(30)
+
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("products")
+}
