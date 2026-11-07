@@ -15,9 +15,6 @@ import {
   BookOpen,
   FileText,
   BookMarked,
-  Scale,
-  PieChart,
-  BarChart3,
 } from "lucide-react";
 
 import { LogoutButton } from "@/components/logout-button";
@@ -76,14 +73,6 @@ const navGroups = [
       { title: "Daftar Akun", href: "/daftar-akun", icon: BookOpen },
       { title: "Jurnal Umum", href: "/jurnal-umum", icon: FileText },
       { title: "Buku Besar", href: "/buku-besar", icon: BookMarked },
-    ],
-  },
-  {
-    label: "Laporan",
-    items: [
-      { title: "Neraca Saldo", href: "/neraca-saldo", icon: Scale },
-      { title: "Laba Rugi", href: "/laba-rugi", icon: PieChart },
-      { title: "Neraca", href: "/neraca", icon: BarChart3 },
     ],
   },
 ];

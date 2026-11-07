@@ -20,9 +20,6 @@ const PROTECTED_ROUTES = [
   "/daftar-akun",
   "/jurnal-umum",
   "/buku-besar",
-  "/neraca-saldo",
-  "/laba-rugi",
-  "/neraca",
 ];
 
 /** Routes that redirect authenticated users away (login, etc.). */

@@ -35,9 +35,6 @@ const routeTitles: Record<string, string> = {
   "/daftar-akun": "Daftar Akun",
   "/jurnal-umum": "Jurnal Umum",
   "/buku-besar": "Buku Besar",
-  "/neraca-saldo": "Neraca Saldo",
-  "/laba-rugi": "Laba Rugi",
-  "/neraca": "Neraca",
 };
 
 interface AppHeaderProps {
