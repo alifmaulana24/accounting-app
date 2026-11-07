@@ -15,3 +15,21 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Follow the architectural and business rules defined in docs/.
 - Read relevant Skills before performing technical tasks.
 - Do not make assumptions about undocumented business rules.
+
+
+## Documentation Maintenance
+
+After implementing a feature or making an approved project change:
+
+1. Identify which documentation files are affected.
+2. Compare the actual implementation with the current documentation.
+3. Update only the relevant documentation files.
+4. Do not update unrelated documents.
+5. Clearly distinguish implemented features from planned features.
+6. Never document a feature as implemented unless it has actually been implemented and verified.
+7. Do not overwrite existing business decisions without explicit approval.
+
+At the end of each task, report:
+- Documentation files updated.
+- Documentation files that did not require changes.
+- Any outdated or conflicting information discovered.
