@@ -73,6 +73,7 @@ interface ProductTableProps {
   isLoading: boolean;
   error: string | null;
   onRetry: () => void;
+  onRequestEdit?: (product: Product) => void;
   onRequestDelete?: (product: Product) => void;
 }
 
@@ -81,6 +82,7 @@ export function ProductTable({
   isLoading,
   error,
   onRetry,
+  onRequestEdit,
   onRequestDelete,
 }: ProductTableProps) {
   const [search, setSearch] = React.useState("");
@@ -251,7 +253,7 @@ export function ProductTable({
                         variant="ghost"
                         size="icon-sm"
                         title="Edit produk"
-                        disabled
+                        onClick={() => onRequestEdit?.(product)}
                       >
                         <Pencil className="size-4" />
                       </Button>

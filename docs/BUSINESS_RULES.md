@@ -60,6 +60,15 @@ ordinary product update operations. Changing this decision requires
 reviewing all dependent foreign keys and transaction/inventory
 references.
 
+### Product update rules
+
+- Product data can be updated via `PATCH /api/products/[sku]`.
+- Updatable fields: `name`, `category`, `brand`, `unit`, and `isActive`.
+- SKU cannot be modified on update.
+- Category and unit values are automatically trimmed and normalized to uppercase.
+- Brand is optional and normalized to `null` if empty or whitespace only.
+- Validation errors return HTTP 400 with per-field errors.
+
 ## 3. Master Supplier
 
 ### Supplier fields

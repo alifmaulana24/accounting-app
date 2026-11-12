@@ -70,6 +70,50 @@ Example success response:
 
 The actual response may contain additional Product fields.
 
+### `PATCH /api/products/[sku]`
+
+Purpose: update product information and/or active status.
+
+Expected request fields:
+
+``` json
+{
+  "name": "Cat Food Adult Tuna",
+  "category": "Makanan Kucing",
+  "brand": "Choize",
+  "unit": "PCS",
+  "isActive": true
+}
+```
+
+Rules:
+- Validate with `editProductSchema`.
+- `sku` cannot be modified (primary key).
+- Category and unit are trimmed and normalized to uppercase.
+- Return HTTP `200` with updated data when successful.
+- Return HTTP `400` for invalid input with `errors`.
+- Return HTTP `404` when product is not found.
+- Return HTTP `500` for unexpected server errors.
+
+Example success response:
+
+``` json
+{
+  "success": true,
+  "message": "Produk berhasil diperbarui.",
+  "data": {
+    "sku": "TEST001",
+    "name": "Cat Food Adult Tuna",
+    "category": "MAKANAN KUCING",
+    "brand": "Choize",
+    "unit": "PCS",
+    "isActive": true,
+    "createdAt": "2026-11-12T08:53:03.523Z",
+    "updatedAt": "2026-11-12T09:15:00.000Z"
+  }
+}
+```
+
 ### `DELETE /api/products/[sku]`
 
 Purpose: delete a product by its unique SKU.

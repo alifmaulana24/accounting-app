@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { editProductSchema } from "@/lib/validations/product";
 
 export async function GET(
   _request: Request,
@@ -30,6 +31,76 @@ export async function GET(
       {
         success: false,
         message: "Gagal mengambil data produk.",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ sku: string }> }
+) {
+  try {
+    const { sku } = await params;
+    const body = await request.json();
+
+    const validation = editProductSchema.safeParse(body);
+
+    if (!validation.success) {
+      return Response.json(
+        {
+          success: false,
+          message: "Validasi data gagal.",
+          errors: validation.error.flatten().fieldErrors,
+        },
+        { status: 400 }
+      );
+    }
+
+    const data = validation.data;
+
+    const product = await prisma.product.update({
+      where: { sku },
+      data: {
+        name: data.name,
+        category: data.category,
+        brand: data.brand ?? null,
+        unit: data.unit,
+        isActive: data.isActive,
+      },
+    });
+
+    return Response.json(
+      {
+        success: true,
+        message: "Produk berhasil diperbarui.",
+        data: product,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2025"
+    ) {
+      return Response.json(
+        {
+          success: false,
+          message: "Produk tidak ditemukan.",
+        },
+        { status: 404 }
+      );
+    }
+
+    console.error("PATCH /api/products/[sku] error:", error);
+
+    return Response.json(
+      {
+        success: false,
+        message: "Gagal memperbarui produk.",
       },
       { status: 500 }
     );

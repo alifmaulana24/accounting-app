@@ -56,3 +56,34 @@ export interface DeleteProductResponse {
   success: boolean;
   message: string;
 }
+
+// Tipe input untuk form edit produk (sebelum dikirim ke API)
+export interface EditProductFormData {
+  name: string;
+  category: string;
+  brand: string;
+  unit: string;
+  isActive: boolean;
+}
+
+// Tipe error validasi per-field dari API untuk edit produk
+export type EditProductFieldErrors = Partial<
+  Record<keyof EditProductFormData, string[]>
+>;
+
+// Tipe respons API PATCH /api/products/[sku] (success)
+export interface UpdateProductSuccess {
+  success: true;
+  message: string;
+  data: Product;
+}
+
+// Tipe respons API PATCH /api/products/[sku] (error)
+export interface UpdateProductError {
+  success: false;
+  message: string;
+  errors?: EditProductFieldErrors;
+}
+
+export type UpdateProductResponse = UpdateProductSuccess | UpdateProductError;
+

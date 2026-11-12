@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ProductDialog } from "@/components/products/product-dialog";
 import { ProductTable } from "@/components/products/product-table";
+import { ProductEditDialog } from "@/components/products/product-edit-dialog";
 import { ProductDeleteDialog } from "@/components/products/product-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, X } from "lucide-react";
@@ -18,6 +19,10 @@ export function ProdukPageClient() {
   const [products, setProducts] = React.useState<Product[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+
+  // Edit dialog state
+  const [productToEdit, setProductToEdit] = React.useState<Product | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
 
   // Delete dialog state
   const [productToDelete, setProductToDelete] = React.useState<Product | null>(null);
@@ -64,6 +69,23 @@ export function ProdukPageClient() {
     setNotification({
       type: "success",
       message: `Produk "${product.name}" (${product.sku}) berhasil ditambahkan.`,
+    });
+  }
+
+  function handleRequestEdit(product: Product) {
+    setProductToEdit(product);
+    setIsEditDialogOpen(true);
+  }
+
+  function handleProductUpdated(updated: Product) {
+    setProducts((prev) =>
+      prev
+        .map((p) => (p.sku === updated.sku ? updated : p))
+        .sort((a, b) => a.name.localeCompare(b.name))
+    );
+    setNotification({
+      type: "success",
+      message: `Produk "${updated.name}" (${updated.sku}) berhasil diperbarui.`,
     });
   }
 
@@ -142,7 +164,16 @@ export function ProdukPageClient() {
         isLoading={isLoading}
         error={error}
         onRetry={fetchProducts}
+        onRequestEdit={handleRequestEdit}
         onRequestDelete={handleRequestDelete}
+      />
+
+      {/* Edit dialog */}
+      <ProductEditDialog
+        product={productToEdit}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onProductUpdated={handleProductUpdated}
       />
 
       {/* Delete confirmation dialog */}
