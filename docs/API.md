@@ -212,7 +212,119 @@ Behavior:
 - Returns HTTP `404` when supplier is not found.
 - Returns HTTP `500` for unexpected server errors.
 
-## 4. Planned product endpoints
+## 4. Customer endpoints
+
+### `GET /api/customers`
+
+Purpose: retrieve the customer list.
+
+Current behavior:
+- Queries `prisma.customer.findMany()`.
+- Sorts by customer name ascending.
+- Returns `success` and `data`.
+
+Example response:
+
+``` json
+{
+  "success": true,
+  "data": []
+}
+```
+
+### `POST /api/customers`
+
+Purpose: create a new customer.
+
+Expected request fields:
+
+``` json
+{
+  "customerCode": "CUST-001",
+  "name": "Toko Berkah Abadi",
+  "phone": "0812-3456-7890",
+  "email": "toko.berkah@example.com",
+  "address": "Jl. Merdeka No. 12"
+}
+```
+
+Rules:
+- Validate with `createCustomerSchema` from `lib/validations/customer.ts`.
+- `customerCode` is required, maximum 50 characters, and unique.
+- `name` is required, maximum 255 characters.
+- `phone`, `email`, and `address` are optional (empty strings or whitespace are normalized to `null`).
+- New customers are active by default (`isActive = true`).
+- Return HTTP `201` when successful.
+- Return HTTP `400` for invalid input with `errors`.
+- Return HTTP `409` when `customerCode` already exists.
+- Return HTTP `500` for unexpected server errors.
+
+Example success response:
+
+``` json
+{
+  "success": true,
+  "message": "Pelanggan berhasil ditambahkan.",
+  "data": {
+    "customerCode": "CUST-001",
+    "name": "Toko Berkah Abadi",
+    "phone": "0812-3456-7890",
+    "email": "toko.berkah@example.com",
+    "address": "Jl. Merdeka No. 12",
+    "isActive": true,
+    "createdAt": "2026-11-12T14:13:10.000Z",
+    "updatedAt": "2026-11-12T14:13:10.000Z"
+  }
+}
+```
+
+### `GET /api/customers/[customerCode]`
+
+Purpose: retrieve customer detail by customerCode.
+
+Behavior:
+- Reads `customerCode` from dynamic route parameter.
+- Queries `prisma.customer.findUnique({ where: { customerCode } })`.
+- Returns HTTP `200` with customer data when found.
+- Returns HTTP `404` when customer is not found.
+- Returns HTTP `500` for unexpected server errors.
+
+### `PATCH /api/customers/[customerCode]`
+
+Purpose: update customer information and/or active status.
+
+Expected request fields:
+
+``` json
+{
+  "name": "Toko Berkah Abadi Updated",
+  "phone": "0812-9999-0000",
+  "email": "kontak@berkahabadi.com",
+  "address": "Jl. Merdeka No. 15",
+  "isActive": false
+}
+```
+
+Rules:
+- Validate with `editCustomerSchema`.
+- `customerCode` cannot be modified (primary key).
+- Return HTTP `200` with updated data when successful.
+- Return HTTP `400` for invalid input with `errors`.
+- Return HTTP `404` when customer is not found.
+- Return HTTP `500` for unexpected server errors.
+
+### `DELETE /api/customers/[customerCode]`
+
+Purpose: delete a customer by customerCode.
+
+Behavior:
+- Reads `customerCode` from dynamic route parameter.
+- Deletes using `prisma.customer.delete({ where: { customerCode } })`.
+- Returns HTTP `200` when successful.
+- Returns HTTP `404` when customer is not found.
+- Returns HTTP `500` for unexpected server errors.
+
+## 5. Planned product endpoints
 
 The following endpoints are intended, but must be checked against the
 current implementation before being treated as complete:
@@ -229,7 +341,7 @@ current implementation before being treated as complete:
 
 Note: `DELETE /api/products/[sku]` is implemented as documented above.
 
-## 5. Error response convention
+## 6. Error response convention
 
 Recommended shape:
 
@@ -243,7 +355,7 @@ Recommended shape:
 
 The `errors` property may be included for field-level validation errors.
 
-## 6. Security and data integrity
+## 7. Security and data integrity
 
 -   Treat all request bodies as untrusted.
 -   Whitelist accepted fields; do not spread arbitrary request JSON into

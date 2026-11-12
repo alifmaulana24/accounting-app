@@ -90,7 +90,37 @@ references.
 - Ledger uses a snapshot approach for historical transactions. Modifying or deleting master supplier data does not affect historical transaction records.
 - No contact person, notes, balance, or total purchase fields are maintained on the master supplier record.
 
-## 4. Purchasing
+## 4. Master Customer
+
+### Customer fields
+
+  -----------------------------------------------------------------------
+  Field                               Rule
+  ----------------------------------- -----------------------------------
+  Kode Pelanggan (customerCode)       Required, unique, maximum 50
+                                      characters; primary key, input manually
+
+  Nama Pelanggan (name)               Required, maximum 255 characters
+
+  Nomor Telepon (phone)               Optional, maximum 30 characters
+
+  Email                               Optional, maximum 255 characters, valid email format
+
+  Alamat (address)                    Optional, text
+
+  Status (isActive)                   Defaults to active (true)
+
+  Created/updated timestamps          Maintained by database/ORM
+  -----------------------------------------------------------------------
+
+### Lifecycle and Snapshot Boundary
+
+- `customerCode` is immutable as the primary key.
+- Customers can be edited, activated, deactivated, and deleted.
+- Ledger uses a snapshot approach for historical transactions. Modifying or deleting master customer data does not affect historical transaction records.
+- No contact person, notes, balance, or total sales fields are maintained on the master customer record.
+
+## 5. Purchasing
 
 -   Purchase transactions reference existing products and suppliers.
 -   A purchase receipt is recorded in full in the initial workflow.
@@ -99,7 +129,7 @@ references.
 -   Purchase payment may be full, partial, or unpaid.
 -   Unpaid amounts contribute to accounts payable.
 
-## 5. Sales
+## 6. Sales
 
 -   Sales transactions reference existing products and customers where
     applicable.
@@ -111,7 +141,7 @@ references.
 -   Sales payment may be full, partial, or unpaid.
 -   Unpaid amounts contribute to accounts receivable.
 
-## 6. Inventory and FIFO
+## 7. Inventory and FIFO
 
 -   Inventory valuation uses FIFO (First In, First Out).
 -   Each incoming stock event creates an inventory layer with quantity
@@ -124,7 +154,7 @@ references.
     FIFO layer can be created.
 -   Stock decreases through adjustment consume existing FIFO layers.
 
-## 7. Payments and outstanding balances
+## 8. Payments and outstanding balances
 
 -   Payment records must be linked to their originating purchase or
     sales transaction.
@@ -137,7 +167,7 @@ references.
     balance.
 -   Partial and unpaid transactions retain their outstanding balances.
 
-## 8. Journals
+## 9. Journals
 
 -   Relevant operational transactions generate journal entries.
 -   Manual journal entries are also supported by the planned General
@@ -147,7 +177,7 @@ references.
 -   Posted journal entries should not be silently edited. Corrections
     should use reversal entries.
 
-## 9. Cancellation and correction
+## 10. Cancellation and correction
 
 -   Preserve cancelled transactions for auditability.
 -   Do not treat cancellation as merely changing a status if inventory,
@@ -161,7 +191,7 @@ references.
 -   Detailed refund/payment reversal behavior still requires an explicit
     design decision before implementing cancellation workflows.
 
-## 10. Important implementation boundary
+## 11. Important implementation boundary
 
 The frontend may collect user input and display calculated results, but
 business-critical calculations and validation (stock availability, FIFO
