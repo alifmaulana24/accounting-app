@@ -136,7 +136,8 @@ references.
 -   Receiving purchased goods increases inventory and creates FIFO
     inventory cost layers.
 -   Purchase payment may be full, partial, or unpaid.
--   Unpaid amounts contribute to accounts payable.
+-   Payment records and their history remain attached to the originating
+    purchase.
 
 ## 6. Sales
 
@@ -148,7 +149,6 @@ references.
     or COGS.
 -   Sales must be rejected if available stock is insufficient.
 -   Sales payment may be full, partial, or unpaid.
--   Unpaid amounts contribute to accounts receivable.
 
 ## 7. Inventory and FIFO
 
@@ -163,7 +163,7 @@ references.
     FIFO layer can be created.
 -   Stock decreases through adjustment consume existing FIFO layers.
 
-## 8. Payments and outstanding balances
+## 8. Payments and remaining transaction amounts
 
 -   Payment records must be linked to their originating purchase or
     sales transaction.
@@ -172,9 +172,8 @@ references.
     -   Belum Dibayar
     -   Dibayar Sebagian
     -   Lunas
--   Fully paid transactions have no remaining payable/receivable
-    balance.
--   Partial and unpaid transactions retain their outstanding balances.
+-   Remaining amounts are tracked only on their originating transactions;
+    they are not managed in a separate module.
 
 ## 9. Journals
 

@@ -30,8 +30,6 @@ const routeTitles: Record<string, string> = {
   "/pembelian": "Pembelian",
   "/penjualan": "Penjualan",
   "/inventory": "Inventory",
-  "/pembayaran-pemasok": "Manajemen Utang",
-  "/penerimaan-pelanggan": "Manajemen Piutang",
   "/daftar-akun": "Daftar Akun",
   "/jurnal-umum": "Jurnal Umum",
   "/buku-besar": "Buku Besar",

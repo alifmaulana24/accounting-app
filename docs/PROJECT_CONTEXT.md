@@ -16,7 +16,8 @@ be a full accounting system**.
 -   Record purchases and sales.
 -   Track inventory quantities and stock movements.
 -   Calculate inventory cost and cost of goods sold (COGS) using FIFO.
--   Track accounts payable and receivable.
+-   Track purchase payments and their history on the originating
+    transactions.
 -   Generate journal entries from relevant operational transactions.
 -   Provide a clear operational dashboard and transaction history.
 
@@ -48,8 +49,7 @@ as the source of truth.
 -   Product master
 -   Supplier master
 -   Customer master
--   Accounts payable management
--   Accounts receivable management
+-   Purchase payment recording and payment history
 -   Operational transaction history
 -   General Journal
 

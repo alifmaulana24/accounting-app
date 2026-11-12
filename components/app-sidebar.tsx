@@ -10,8 +10,6 @@ import {
   ShoppingCart,
   TrendingUp,
   Warehouse,
-  CreditCard,
-  Banknote,
   BookOpen,
   FileText,
   BookMarked,
@@ -58,13 +56,6 @@ const navGroups = [
       { title: "Pembelian", href: "/pembelian", icon: ShoppingCart },
       { title: "Penjualan", href: "/penjualan", icon: TrendingUp },
       { title: "Inventory", href: "/inventory", icon: Warehouse },
-    ],
-  },
-  {
-    label: "Pembayaran",
-    items: [
-      { title: "Manajemen Utang", href: "/pembayaran-pemasok", icon: CreditCard },
-      { title: "Manajemen Piutang", href: "/penerimaan-pelanggan", icon: Banknote },
     ],
   },
   {
