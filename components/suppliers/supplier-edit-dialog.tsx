@@ -14,11 +14,11 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
-import { editSupplierSchema } from "@/lib/validations/supplier";
 import type {
   Supplier,
   EditSupplierFormData,
   EditSupplierFieldErrors,
+  UpdateSupplierResponse,
 } from "@/types/supplier";
 
 // ---------------------------------------------------------------------------
@@ -75,6 +75,7 @@ export function SupplierEditDialog({
   const [fieldErrors, setFieldErrors] = React.useState<EditSupplierFieldErrors>(
     {}
   );
+  const [serverError, setServerError] = React.useState<string | null>(null);
   const [formData, setFormData] = React.useState<EditSupplierFormData>({
     name: "",
     phone: "",
@@ -94,6 +95,7 @@ export function SupplierEditDialog({
         isActive: supplier.isActive,
       });
       setFieldErrors({});
+      setServerError(null);
     }
   }, [supplier]);
 
@@ -107,50 +109,52 @@ export function SupplierEditDialog({
     if (fieldErrors[name as keyof EditSupplierFormData]) {
       setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
     }
+    if (serverError) setServerError(null);
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!supplier) return;
-    setFieldErrors({});
-
-    const result = editSupplierSchema.safeParse({
-      name: formData.name,
-      phone: formData.phone,
-      email: formData.email,
-      address: formData.address,
-      isActive: formData.isActive,
-    });
-
-    if (!result.success) {
-      const errors: EditSupplierFieldErrors = {};
-      for (const issue of result.error.issues) {
-        const field = issue.path[0] as keyof EditSupplierFormData;
-        if (!errors[field]) errors[field] = [];
-        errors[field]!.push(issue.message);
-      }
-      setFieldErrors(errors);
-      return;
-    }
-
     setIsPending(true);
-    // Simulate async (replace with API call later)
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    setFieldErrors({});
+    setServerError(null);
 
-    const updated: Supplier = {
-      supplierCode: supplier.supplierCode,
-      createdAt: supplier.createdAt,
-      name: formData.name.trim(),
-      phone: formData.phone.trim() || null,
-      email: formData.email.trim() || null,
-      address: formData.address.trim() || null,
-      isActive: formData.isActive,
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      const payload = {
+        name: formData.name.trim(),
+        phone: formData.phone.trim() || null,
+        email: formData.email.trim() || null,
+        address: formData.address.trim() || null,
+        isActive: formData.isActive,
+      };
 
-    setIsPending(false);
-    onSupplierUpdated(updated);
-    onOpenChange(false);
+      const res = await fetch(
+        `/api/suppliers/${encodeURIComponent(supplier.supplierCode)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const json: UpdateSupplierResponse = await res.json();
+
+      if (json.success) {
+        onSupplierUpdated(json.data);
+        onOpenChange(false);
+        return;
+      }
+
+      if (res.status === 400 && json.errors) {
+        setFieldErrors(json.errors);
+      } else {
+        setServerError(json.message);
+      }
+    } catch {
+      setServerError("Terjadi kesalahan koneksi. Silakan coba lagi.");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
@@ -287,6 +291,12 @@ export function SupplierEditDialog({
               />
             </button>
           </div>
+
+          {serverError && (
+            <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {serverError}
+            </p>
+          )}
 
           <DialogFooter className="mt-2">
             <DialogClose

@@ -12,20 +12,22 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import type { Supplier } from "@/types/supplier";
+import type { Supplier, DeleteSupplierResponse } from "@/types/supplier";
 
 interface SupplierDeleteDialogProps {
   supplier: Supplier | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (supplier: Supplier) => void;
+  onSuccess: (deletedSupplier: Supplier) => void;
+  onError: (errorMessage: string) => void;
 }
 
 export function SupplierDeleteDialog({
   supplier,
   open,
   onOpenChange,
-  onConfirm,
+  onSuccess,
+  onError,
 }: SupplierDeleteDialogProps) {
   const [isDeleting, setIsDeleting] = React.useState(false);
 
@@ -34,11 +36,30 @@ export function SupplierDeleteDialog({
   async function handleDelete() {
     if (!supplier) return;
     setIsDeleting(true);
-    // Simulate async (replace with API call later)
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    setIsDeleting(false);
-    onConfirm(supplier);
-    onOpenChange(false);
+
+    try {
+      const res = await fetch(
+        `/api/suppliers/${encodeURIComponent(supplier.supplierCode)}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const json: DeleteSupplierResponse = await res.json();
+
+      if (json.success) {
+        onSuccess(supplier);
+        onOpenChange(false);
+      } else {
+        onError(json.message || "Gagal menghapus supplier.");
+        onOpenChange(false);
+      }
+    } catch {
+      onError("Terjadi kesalahan koneksi saat menghapus supplier.");
+      onOpenChange(false);
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   return (
@@ -80,4 +101,3 @@ export function SupplierDeleteDialog({
     </AlertDialog>
   );
 }
-

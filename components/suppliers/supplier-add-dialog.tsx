@@ -15,11 +15,11 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Plus, Loader2 } from "lucide-react";
-import { createSupplierSchema } from "@/lib/validations/supplier";
 import type {
   Supplier,
   CreateSupplierFormData,
   SupplierFieldErrors,
+  CreateSupplierResponse,
 } from "@/types/supplier";
 
 // ---------------------------------------------------------------------------
@@ -60,18 +60,14 @@ function FormField({
 // ---------------------------------------------------------------------------
 
 interface SupplierAddFormProps {
-  existingCodes: string[];
   onSuccess: (supplier: Supplier) => void;
   onClose: () => void;
 }
 
-function SupplierAddForm({
-  existingCodes,
-  onSuccess,
-  onClose,
-}: SupplierAddFormProps) {
+function SupplierAddForm({ onSuccess, onClose }: SupplierAddFormProps) {
   const [isPending, setIsPending] = React.useState(false);
   const [fieldErrors, setFieldErrors] = React.useState<SupplierFieldErrors>({});
+  const [serverError, setServerError] = React.useState<string | null>(null);
 
   const [formData, setFormData] = React.useState<CreateSupplierFormData>({
     supplierCode: "",
@@ -89,62 +85,55 @@ function SupplierAddForm({
     if (fieldErrors[name as keyof CreateSupplierFormData]) {
       setFieldErrors((prev) => ({ ...prev, [name]: undefined }));
     }
+    if (serverError) setServerError(null);
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setFieldErrors({});
-
-    // Validate with Zod
-    const result = createSupplierSchema.safeParse({
-      supplierCode: formData.supplierCode,
-      name: formData.name,
-      phone: formData.phone,
-      email: formData.email,
-      address: formData.address,
-    });
-
-    if (!result.success) {
-      const errors: SupplierFieldErrors = {};
-      for (const issue of result.error.issues) {
-        const field = issue.path[0] as keyof CreateSupplierFormData;
-        if (!errors[field]) errors[field] = [];
-        errors[field]!.push(issue.message);
-      }
-      setFieldErrors(errors);
-      return;
-    }
-
-    // Check uniqueness
-    const trimmedCode = formData.supplierCode.trim().toUpperCase();
-    if (
-      existingCodes.some((c) => c.toUpperCase() === trimmedCode)
-    ) {
-      setFieldErrors({
-        supplierCode: ["Kode supplier sudah digunakan. Gunakan kode yang berbeda."],
-      });
-      return;
-    }
-
     setIsPending(true);
-    // Simulate async (replace with API call later)
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    setFieldErrors({});
+    setServerError(null);
 
-    const now = new Date().toISOString();
-    const newSupplier: Supplier = {
-      supplierCode: trimmedCode,
-      name: formData.name.trim(),
-      phone: formData.phone.trim() || null,
-      email: formData.email.trim() || null,
-      address: formData.address.trim() || null,
-      isActive: true,
-      createdAt: now,
-      updatedAt: now,
-    };
+    try {
+      const payload = {
+        supplierCode: formData.supplierCode.trim(),
+        name: formData.name.trim(),
+        phone: formData.phone.trim() || null,
+        email: formData.email.trim() || null,
+        address: formData.address.trim() || null,
+      };
 
-    setIsPending(false);
-    onSuccess(newSupplier);
-    onClose();
+      const res = await fetch("/api/suppliers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json: CreateSupplierResponse = await res.json();
+
+      if (json.success) {
+        setFormData({
+          supplierCode: "",
+          name: "",
+          phone: "",
+          email: "",
+          address: "",
+        });
+        onSuccess(json.data);
+        onClose();
+        return;
+      }
+
+      if (res.status === 400 && json.errors) {
+        setFieldErrors(json.errors);
+      } else {
+        setServerError(json.message);
+      }
+    } catch {
+      setServerError("Terjadi kesalahan koneksi. Silakan coba lagi.");
+    } finally {
+      setIsPending(false);
+    }
   }
 
   return (
@@ -231,6 +220,12 @@ function SupplierAddForm({
         />
       </FormField>
 
+      {serverError && (
+        <p className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+          {serverError}
+        </p>
+      )}
+
       <DialogFooter className="mt-2">
         <DialogClose
           render={
@@ -253,12 +248,10 @@ function SupplierAddForm({
 // ---------------------------------------------------------------------------
 
 interface SupplierAddDialogProps {
-  existingCodes: string[];
   onSupplierAdded: (supplier: Supplier) => void;
 }
 
 export function SupplierAddDialog({
-  existingCodes,
   onSupplierAdded,
 }: SupplierAddDialogProps) {
   const [open, setOpen] = React.useState(false);
@@ -287,7 +280,6 @@ export function SupplierAddDialog({
           </DialogDescription>
         </DialogHeader>
         <SupplierAddForm
-          existingCodes={existingCodes}
           onSuccess={onSupplierAdded}
           onClose={handleClose}
         />
@@ -295,4 +287,3 @@ export function SupplierAddDialog({
     </Dialog>
   );
 }
-

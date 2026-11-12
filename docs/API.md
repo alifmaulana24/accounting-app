@@ -100,7 +100,119 @@ Example not found response (`404`):
 }
 ```
 
-## 3. Planned product endpoints
+## 3. Supplier endpoints
+
+### `GET /api/suppliers`
+
+Purpose: retrieve the supplier list.
+
+Current behavior:
+- Queries `prisma.supplier.findMany()`.
+- Sorts by supplier name ascending.
+- Returns `success` and `data`.
+
+Example response:
+
+``` json
+{
+  "success": true,
+  "data": []
+}
+```
+
+### `POST /api/suppliers`
+
+Purpose: create a new supplier.
+
+Expected request fields:
+
+``` json
+{
+  "supplierCode": "SUP-001",
+  "name": "PT Maju Bersama",
+  "phone": "021-55512345",
+  "email": "info@majubersama.com",
+  "address": "Jl. Raya Jakarta No. 10"
+}
+```
+
+Rules:
+- Validate with `createSupplierSchema` from `lib/validations/supplier.ts`.
+- `supplierCode` is required, maximum 50 characters, and unique.
+- `name` is required, maximum 255 characters.
+- `phone`, `email`, and `address` are optional (`null` if empty or omitted).
+- New suppliers are active by default (`isActive = true`).
+- Return HTTP `201` when successful.
+- Return HTTP `400` for invalid input with `errors`.
+- Return HTTP `409` when `supplierCode` already exists.
+- Return HTTP `500` for unexpected server errors.
+
+Example success response:
+
+``` json
+{
+  "success": true,
+  "message": "Supplier berhasil ditambahkan.",
+  "data": {
+    "supplierCode": "SUP-001",
+    "name": "PT Maju Bersama",
+    "phone": "021-55512345",
+    "email": "info@majubersama.com",
+    "address": "Jl. Raya Jakarta No. 10",
+    "isActive": true,
+    "createdAt": "2026-11-12T08:53:03.523Z",
+    "updatedAt": "2026-11-12T08:53:03.523Z"
+  }
+}
+```
+
+### `GET /api/suppliers/[supplierCode]`
+
+Purpose: retrieve supplier detail by supplierCode.
+
+Behavior:
+- Reads `supplierCode` from dynamic route parameter.
+- Queries `prisma.supplier.findUnique({ where: { supplierCode } })`.
+- Returns HTTP `200` with supplier data when found.
+- Returns HTTP `404` when supplier is not found.
+- Returns HTTP `500` for unexpected server errors.
+
+### `PATCH /api/suppliers/[supplierCode]`
+
+Purpose: update supplier information and/or active status.
+
+Expected request fields:
+
+``` json
+{
+  "name": "PT Maju Bersama Updated",
+  "phone": "021-55599999",
+  "email": "contact@majubersama.com",
+  "address": "Jl. Baru No. 20",
+  "isActive": false
+}
+```
+
+Rules:
+- Validate with `editSupplierSchema`.
+- `supplierCode` cannot be modified (primary key).
+- Return HTTP `200` with updated data when successful.
+- Return HTTP `400` for invalid input with `errors`.
+- Return HTTP `404` when supplier is not found.
+- Return HTTP `500` for unexpected server errors.
+
+### `DELETE /api/suppliers/[supplierCode]`
+
+Purpose: delete a supplier by supplierCode.
+
+Behavior:
+- Reads `supplierCode` from dynamic route parameter.
+- Deletes using `prisma.supplier.delete({ where: { supplierCode } })`.
+- Returns HTTP `200` when successful.
+- Returns HTTP `404` when supplier is not found.
+- Returns HTTP `500` for unexpected server errors.
+
+## 4. Planned product endpoints
 
 The following endpoints are intended, but must be checked against the
 current implementation before being treated as complete:
@@ -117,7 +229,7 @@ current implementation before being treated as complete:
 
 Note: `DELETE /api/products/[sku]` is implemented as documented above.
 
-## 4. Error response convention
+## 5. Error response convention
 
 Recommended shape:
 
@@ -131,7 +243,7 @@ Recommended shape:
 
 The `errors` property may be included for field-level validation errors.
 
-## 5. Security and data integrity
+## 6. Security and data integrity
 
 -   Treat all request bodies as untrusted.
 -   Whitelist accepted fields; do not spread arbitrary request JSON into

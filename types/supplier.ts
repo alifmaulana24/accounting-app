@@ -33,3 +33,67 @@ export type EditSupplierFieldErrors = Partial<
   Record<keyof EditSupplierFormData, string[]>
 >;
 
+// ---------------------------------------------------------------------------
+// API Response Types
+// ---------------------------------------------------------------------------
+
+export interface GetSuppliersSuccess {
+  success: true;
+  data: Supplier[];
+}
+
+export interface GetSuppliersError {
+  success: false;
+  message: string;
+}
+
+export type GetSuppliersResponse = GetSuppliersSuccess | GetSuppliersError;
+
+export interface GetSupplierSuccess {
+  success: true;
+  data: Supplier;
+}
+
+export interface GetSupplierError {
+  success: false;
+  message: string;
+}
+
+export type GetSupplierResponse = GetSupplierSuccess | GetSupplierError;
+
+export interface CreateSupplierSuccess {
+  success: true;
+  message: string;
+  data: Supplier;
+}
+
+export interface CreateSupplierError {
+  success: false;
+  message: string;
+  errors?: SupplierFieldErrors;
+}
+
+export type CreateSupplierResponse =
+  | CreateSupplierSuccess
+  | CreateSupplierError;
+
+export interface UpdateSupplierSuccess {
+  success: true;
+  message: string;
+  data: Supplier;
+}
+
+export interface UpdateSupplierError {
+  success: false;
+  message: string;
+  errors?: EditSupplierFieldErrors;
+}
+
+export type UpdateSupplierResponse =
+  | UpdateSupplierSuccess
+  | UpdateSupplierError;
+
+export interface DeleteSupplierResponse {
+  success: boolean;
+  message: string;
+}

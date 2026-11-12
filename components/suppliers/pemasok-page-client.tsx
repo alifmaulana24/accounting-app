@@ -3,49 +3,13 @@
 import * as React from "react";
 import { SupplierAddDialog } from "@/components/suppliers/supplier-add-dialog";
 import { SupplierTable } from "@/components/suppliers/supplier-table";
+import { SupplierDetailDialog } from "@/components/suppliers/supplier-detail-dialog";
 import { SupplierEditDialog } from "@/components/suppliers/supplier-edit-dialog";
 import { SupplierDeleteDialog } from "@/components/suppliers/supplier-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, X } from "lucide-react";
 import { cn } from "cn";
-import type { Supplier } from "@/types/supplier";
-
-// ---------------------------------------------------------------------------
-// Sample data
-// ---------------------------------------------------------------------------
-
-const SAMPLE_SUPPLIERS: Supplier[] = [
-  {
-    supplierCode: "SUP-001",
-    name: "PT Maju Bersama",
-    phone: "021-55512345",
-    email: "info@majubersama.com",
-    address: "Jl. Raya Jakarta No. 10, Jakarta Pusat",
-    isActive: true,
-    createdAt: "2026-01-10T07:00:00.000Z",
-    updatedAt: "2026-01-10T07:00:00.000Z",
-  },
-  {
-    supplierCode: "SUP-002",
-    name: "CV Sukses Mandiri",
-    phone: null,
-    email: null,
-    address: null,
-    isActive: true,
-    createdAt: "2026-02-15T07:00:00.000Z",
-    updatedAt: "2026-02-15T07:00:00.000Z",
-  },
-  {
-    supplierCode: "SUP-003",
-    name: "UD Karya Utama",
-    phone: "0812-9999-8888",
-    email: "karyautama@email.com",
-    address: "Jl. Sudirman No. 45, Bandung",
-    isActive: false,
-    createdAt: "2026-03-20T07:00:00.000Z",
-    updatedAt: "2026-03-20T07:00:00.000Z",
-  },
-];
+import type { Supplier, GetSuppliersResponse } from "@/types/supplier";
 
 // ---------------------------------------------------------------------------
 // Notification state
@@ -61,9 +25,14 @@ interface NotificationState {
 // ---------------------------------------------------------------------------
 
 export function PemasokPageClient() {
-  const [suppliers, setSuppliers] = React.useState<Supplier[]>(SAMPLE_SUPPLIERS);
-  const [isLoading] = React.useState(false);
-  const [error] = React.useState<string | null>(null);
+  const [suppliers, setSuppliers] = React.useState<Supplier[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  // Detail dialog state
+  const [supplierForDetail, setSupplierForDetail] =
+    React.useState<Supplier | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = React.useState(false);
 
   // Edit dialog state
   const [supplierToEdit, setSupplierToEdit] = React.useState<Supplier | null>(
@@ -79,6 +48,28 @@ export function PemasokPageClient() {
   // Notification state
   const [notification, setNotification] =
     React.useState<NotificationState | null>(null);
+
+  async function fetchSuppliers() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/suppliers");
+      const json: GetSuppliersResponse = await res.json();
+      if (json.success) {
+        setSuppliers(json.data);
+      } else {
+        setError(json.message);
+      }
+    } catch {
+      setError("Gagal terhubung ke server. Silakan coba lagi.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  React.useEffect(() => {
+    fetchSuppliers();
+  }, []);
 
   // Auto-dismiss notification after 5 seconds
   React.useEffect(() => {
@@ -97,6 +88,11 @@ export function PemasokPageClient() {
       type: "success",
       message: `Supplier "${supplier.name}" (${supplier.supplierCode}) berhasil ditambahkan.`,
     });
+  }
+
+  function handleRequestDetail(supplier: Supplier) {
+    setSupplierForDetail(supplier);
+    setIsDetailOpen(true);
   }
 
   function handleRequestEdit(supplier: Supplier) {
@@ -121,7 +117,7 @@ export function PemasokPageClient() {
     setIsDeleteDialogOpen(true);
   }
 
-  function handleDeleteConfirm(deleted: Supplier) {
+  function handleDeleteSuccess(deleted: Supplier) {
     setSuppliers((prev) =>
       prev.filter((s) => s.supplierCode !== deleted.supplierCode)
     );
@@ -131,11 +127,12 @@ export function PemasokPageClient() {
     });
   }
 
-  function handleRetry() {
-    // No-op for local data; wire to API fetch later
+  function handleDeleteError(errorMessage: string) {
+    setNotification({
+      type: "error",
+      message: errorMessage,
+    });
   }
-
-  const existingCodes = suppliers.map((s) => s.supplierCode);
 
   return (
     <div className="flex flex-col gap-6">
@@ -150,10 +147,7 @@ export function PemasokPageClient() {
           </p>
         </div>
         <div className="mt-3 sm:mt-0 shrink-0">
-          <SupplierAddDialog
-            existingCodes={existingCodes}
-            onSupplierAdded={handleSupplierAdded}
-          />
+          <SupplierAddDialog onSupplierAdded={handleSupplierAdded} />
         </div>
       </div>
 
@@ -194,9 +188,17 @@ export function PemasokPageClient() {
         suppliers={suppliers}
         isLoading={isLoading}
         error={error}
-        onRetry={handleRetry}
+        onRetry={fetchSuppliers}
+        onRequestDetail={handleRequestDetail}
         onRequestEdit={handleRequestEdit}
         onRequestDelete={handleRequestDelete}
+      />
+
+      {/* Detail dialog */}
+      <SupplierDetailDialog
+        supplier={supplierForDetail}
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
       />
 
       {/* Edit dialog */}
@@ -212,9 +214,9 @@ export function PemasokPageClient() {
         supplier={supplierToDelete}
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleDeleteConfirm}
+        onSuccess={handleDeleteSuccess}
+        onError={handleDeleteError}
       />
     </div>
   );
 }
-

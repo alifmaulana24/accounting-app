@@ -25,6 +25,7 @@ import {
   ChevronDown,
   AlertCircle,
   Truck,
+  Eye,
   Pencil,
   Trash2,
 } from "lucide-react";
@@ -87,6 +88,7 @@ interface SupplierTableProps {
   isLoading: boolean;
   error: string | null;
   onRetry: () => void;
+  onRequestDetail?: (supplier: Supplier) => void;
   onRequestEdit: (supplier: Supplier) => void;
   onRequestDelete: (supplier: Supplier) => void;
 }
@@ -96,6 +98,7 @@ export function SupplierTable({
   isLoading,
   error,
   onRetry,
+  onRequestDetail,
   onRequestEdit,
   onRequestDelete,
 }: SupplierTableProps) {
@@ -289,6 +292,16 @@ export function SupplierTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
+                      {onRequestDetail && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          title="Detail supplier"
+                          onClick={() => onRequestDetail(supplier)}
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="icon-sm"
