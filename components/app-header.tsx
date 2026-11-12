@@ -74,9 +74,9 @@ export function AppHeader({ pageTitle, userId }: AppHeaderProps) {
       {/* User avatar + dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger className="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-sm transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <div className="flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold uppercase shrink-0">
+          <span className="flex size-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold uppercase shrink-0">
             {userId.charAt(0)}
-          </div>
+          </span>
           <span className="hidden text-sm font-medium text-foreground sm:inline">
             {userId}
           </span>
