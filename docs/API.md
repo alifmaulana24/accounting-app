@@ -408,3 +408,64 @@ The `errors` property may be included for field-level validation errors.
 -   Enforce uniqueness in PostgreSQL, not only in the UI.
 -   Never expose raw Prisma errors or stack traces in public responses.
 -   Use database transactions for multi-step business operations.
+
+## 8. Purchase endpoints
+
+### `GET /api/purchases`
+
+Returns purchase summaries ordered by purchase date, including the invoice
+number, supplier snapshot, total amount, total paid, outstanding amount,
+and the backend-provided payment status (`Belum Dibayar`, `Sebagian`, or
+`Lunas`).
+
+### `POST /api/purchases`
+
+Creates a purchase and its item snapshots. The frontend sends only:
+
+``` json
+{
+  "purchaseDate": "2026-11-13",
+  "supplierCode": "SUP-001",
+  "items": [
+    {
+      "productSku": "PRD-001",
+      "quantity": 2,
+      "unitPrice": 25000
+    }
+  ],
+  "initialPayment": 0
+}
+```
+
+`initialPayment` is optional and defaults to `0`. Product and supplier
+names, unit, subtotals, and total amount are resolved or calculated by the
+backend. The endpoint returns HTTP `201` with the created purchase,
+including its generated ID and invoice number. Invalid input returns
+HTTP `400`; missing or inactive supplier/product returns HTTP `404`.
+
+### `GET /api/purchases/[id]`
+
+Returns purchase details including supplier and product snapshots, item
+totals, payment history, total paid, outstanding amount, and backend
+payment status. Returns HTTP `404` when the purchase is not found.
+
+### `POST /api/purchases/[id]/payments`
+
+Adds a payment to a purchase. Expected request fields:
+
+``` json
+{
+  "paymentDate": "2026-11-13",
+  "amount": 10000
+}
+```
+
+The amount must be a positive whole number of Rupiah and cannot exceed
+the outstanding amount. Successful responses include the payment and
+updated totals/status. An amount exceeding the balance returns HTTP `400`.
+
+### `DELETE /api/purchases/[id]`
+
+Deletes a purchase only when it has no payment records. Returns HTTP `400`
+when the purchase already has payment history, and HTTP `404` when it is
+not found. Purchase transactions do not support edit/update operations.

@@ -170,7 +170,7 @@ references.
 -   Payment status is derived from the invoice amount and total
     payments:
     -   Belum Dibayar
-    -   Dibayar Sebagian
+    -   Sebagian
     -   Lunas
 -   Remaining amounts are tracked only on their originating transactions;
     they are not managed in a separate module.
