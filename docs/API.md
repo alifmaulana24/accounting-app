@@ -469,3 +469,57 @@ updated totals/status. An amount exceeding the balance returns HTTP `400`.
 Deletes a purchase only when it has no payment records. Returns HTTP `400`
 when the purchase already has payment history, and HTTP `404` when it is
 not found. Purchase transactions do not support edit/update operations.
+
+## 9. Sales endpoints
+
+### `GET /api/sales`
+
+Returns sales summaries ordered by sale date, including invoice number,
+customer snapshot, total amount, total paid, outstanding amount, and the
+backend payment status (`Belum Dibayar`, `Sebagian`, or `Lunas`). The
+response shape is `{ "success": true, "data": [] }`.
+
+### `POST /api/sales`
+
+Creates a sale and its customer, product, and payment snapshots. The
+frontend sends:
+
+``` json
+{
+  "saleDate": "2026-11-13",
+  "customerCode": "CUST-001",
+  "items": [
+    {
+      "productSku": "PRD-001",
+      "quantity": 2,
+      "unitPrice": 30000
+    }
+  ],
+  "initialPayment": 0
+}
+```
+
+`initialPayment` defaults to `0`. Product and customer snapshots and
+financial totals are resolved or calculated by the backend. The endpoint
+returns HTTP `201` with `{ "success": true, "message": "...", "data": {} }`.
+Validation errors return HTTP `400`; missing or inactive customer/product
+also return HTTP `400`.
+
+### `GET /api/sales/[id]`
+
+Returns a sale detail under `data`, including the stored customer and
+product snapshots, payment history, totals, outstanding amount, and
+backend payment status. It returns HTTP `404` with a `message` if not
+found.
+
+### `POST /api/sales/[id]/payments`
+
+Adds a payment using `paymentDate` and a positive whole-Rupiah `amount`.
+The response contains the payment and updated totals/status under `data`.
+An amount exceeding the outstanding balance returns HTTP `400`.
+
+### `DELETE /api/sales/[id]`
+
+Deletes a sale only when it has no payment records. Returns HTTP `400`
+when the sale already has payment history, and HTTP `404` when it is not
+found. Sale transactions do not support edit/update operations.
