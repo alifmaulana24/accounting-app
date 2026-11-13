@@ -122,7 +122,17 @@ references.
 - Ledger uses a snapshot approach for historical transactions. Modifying or deleting master customer data does not affect historical transaction records.
 - No contact person, notes, balance, or total sales fields are maintained on the master customer record.
 
-## 5. Purchasing
+## 5. Chart of Accounts
+
+- Account codes are required, unique, and exactly three digits.
+- Account names are required and limited to 100 characters.
+- Account types are `ASSET`, `LIABILITY`, `EQUITY`, `REVENUE`, or `EXPENSE`.
+- Normal balances are `DEBIT` or `CREDIT`.
+- New accounts are active by default. Existing accounts can be activated or deactivated.
+- System accounts can be edited but cannot be deleted. Additional accounts can be deleted through the API, subject to backend data-integrity checks.
+- The account list is flat; account hierarchy and category filters are not part of this interface.
+
+## 6. Purchasing
 
 -   Purchase transactions reference existing products and suppliers.
 -   A purchase receipt is recorded in full in the initial workflow.
@@ -130,13 +140,13 @@ references.
 -   Payment records and their history remain attached to the originating
     purchase.
 
-## 6. Sales
+## 7. Sales
 
 -   Sales transactions reference existing products and customers where
     applicable.
 -   Sales payment may be full, partial, or unpaid.
 
-## 7. Payments and remaining transaction amounts
+## 8. Payments and remaining transaction amounts
 
 -   Payment records must be linked to their originating purchase or
     sales transaction.
@@ -148,7 +158,7 @@ references.
 -   Remaining amounts are tracked only on their originating transactions;
     they are not managed in a separate module.
 
-## 8. Journals
+## 9. Journals
 
 -   Relevant operational transactions generate journal entries.
 -   Manual journal entries are also supported by the planned General
@@ -158,7 +168,7 @@ references.
 -   Posted journal entries should not be silently edited. Corrections
     should use reversal entries.
 
-## 9. Cancellation and correction
+## 10. Cancellation and correction
 
 -   Preserve cancelled transactions for auditability.
 -   Do not treat cancellation as merely changing a status if payments
@@ -167,7 +177,7 @@ references.
 -   Detailed refund/payment reversal behavior still requires an explicit
     design decision before implementing cancellation workflows.
 
-## 10. Important implementation boundary
+## 11. Important implementation boundary
 
 The frontend may collect user input and display calculated results, but
 business-critical calculations and validation (balances, and journal

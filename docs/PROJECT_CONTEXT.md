@@ -48,6 +48,7 @@ as the source of truth.
 -   Customer master
 -   Purchase payment recording and payment history
 -   Operational transaction history
+-   Chart of Accounts (COA)
 -   General Journal
 
 ### Not included in the initial version

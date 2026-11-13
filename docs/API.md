@@ -523,3 +523,36 @@ An amount exceeding the outstanding balance returns HTTP `400`.
 Deletes a sale only when it has no payment records. Returns HTTP `400`
 when the sale already has payment history, and HTTP `404` when it is not
 found. Sale transactions do not support edit/update operations.
+
+## 10. Chart of Accounts endpoints
+
+### `GET /api/accounts`
+
+Returns all accounts ordered by code ascending in `{ "data": [] }`.
+
+### `POST /api/accounts`
+
+Creates an account. The request accepts `code` (exactly three digits),
+`name` (maximum 100 characters), `accountType` (`ASSET`, `LIABILITY`,
+`EQUITY`, `REVENUE`, or `EXPENSE`), and `normalBalance` (`DEBIT` or
+`CREDIT`). The backend sets new accounts to active and non-system.
+Successful responses return HTTP `201` with `{ "message": "...", "data": {} }`.
+Invalid input returns HTTP `400`; duplicate codes return HTTP `409`.
+
+### `GET /api/accounts/[id]`
+
+Returns the account under `data`; returns HTTP `404` if it does not exist.
+
+### `PATCH /api/accounts/[id]`
+
+Accepts any subset of `code`, `name`, `accountType`, `normalBalance`,
+and `isActive`. At least one field is required. A successful response
+returns the updated account under `data`; invalid input returns HTTP
+`400`, a missing account returns HTTP `404`, and duplicate codes return
+HTTP `409`.
+
+### `DELETE /api/accounts/[id]`
+
+Deletes an additional account. System accounts cannot be deleted
+(HTTP `403`); missing accounts return HTTP `404`. A foreign-key
+constraint conflict returns HTTP `409`.
