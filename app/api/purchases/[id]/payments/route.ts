@@ -1,6 +1,8 @@
+
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { createPurchasePaymentSchema } from "@/lib/validations/purchase";
+import { createJournalEntry } from "@/lib/journal";
 import { z } from "zod";
 
 export async function POST(
@@ -83,12 +85,35 @@ export async function POST(
                 throw new Error("PAYMENT_EXCEEDS_OUTSTANDING");
             }
 
+            // Simpan pembayaran susulan
             const payment = await tx.purchasePayment.create({
                 data: {
                     purchaseId: id,
                     paymentDate,
                     amount: paymentAmount,
                 },
+            });
+
+            // Buat jurnal pembayaran susulan
+            await createJournalEntry(tx, {
+                journalDate: paymentDate,
+                description: `Pembayaran pembelian ${purchase.purchaseNumber}`,
+                sourceType: "PURCHASE_PAYMENT",
+                sourceId: payment.id,
+                lines: [
+                    {
+                        accountCode: "201",
+                        description: "Pembayaran utang usaha",
+                        debit: paymentAmount,
+                        credit: new Prisma.Decimal(0),
+                    },
+                    {
+                        accountCode: "101",
+                        description: "Pembayaran melalui kas",
+                        debit: new Prisma.Decimal(0),
+                        credit: paymentAmount,
+                    },
+                ],
             });
 
             const newTotalPaid = totalPaid.plus(paymentAmount);
@@ -118,26 +143,64 @@ export async function POST(
         );
 
     } catch (error) {
-        if (error instanceof Error && error.message === "PURCHASE_NOT_FOUND") {
-            return Response.json(
-                {
-                    success: false,
-                    message: "Data pembelian tidak ditemukan.",
-                },
-                { status: 404 }
-            );
+        if (error instanceof Error) {
+            if (error.message === "PURCHASE_NOT_FOUND") {
+                return Response.json(
+                    {
+                        success: false,
+                        message: "Data pembelian tidak ditemukan.",
+                    },
+                    { status: 404 }
+                );
+            }
+
+            if (error.message === "PAYMENT_EXCEEDS_OUTSTANDING") {
+                return Response.json(
+                    {
+                        success: false,
+                        message: "Pembayaran melebihi sisa tagihan.",
+                    },
+                    { status: 400 }
+                );
+            }
+
+            if (error.message === "JOURNAL_ACCOUNT_NOT_FOUND_OR_INACTIVE") {
+                console.error("Purchase payment journal account error:", error);
+
+                return Response.json(
+                    {
+                        success: false,
+                        message: "Akun COA untuk jurnal pembayaran tidak ditemukan atau tidak aktif.",
+                    },
+                    { status: 500 }
+                );
+            }
+
+            if (error.message === "INVALID_JOURNAL_BALANCE") {
+                console.error("Purchase payment journal balance error:", error);
+
+                return Response.json(
+                    {
+                        success: false,
+                        message: "Jurnal pembayaran tidak seimbang.",
+                    },
+                    { status: 500 }
+                );
+            }
         }
 
         if (
-            error instanceof Error &&
-            error.message === "PAYMENT_EXCEEDS_OUTSTANDING"
+            typeof error === "object" &&
+            error !== null &&
+            "code" in error &&
+            error.code === "P2002"
         ) {
             return Response.json(
                 {
                     success: false,
-                    message: "Pembayaran melebihi sisa tagihan.",
+                    message: "Jurnal pembayaran sudah tercatat.",
                 },
-                { status: 400 }
+                { status: 409 }
             );
         }
 

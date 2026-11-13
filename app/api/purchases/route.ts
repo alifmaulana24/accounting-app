@@ -4,7 +4,7 @@ import { Prisma } from "@/lib/generated/prisma/client";
 import { createPurchaseSchema } from "@/lib/validations/purchase";
 import { createJournalEntry } from "@/lib/journal";
 
-// /api/purchase GET
+// GET /api/purchases
 export async function GET() {
     try {
         const purchases = await prisma.purchase.findMany({
@@ -66,10 +66,9 @@ export async function GET() {
     }
 }
 
-// /api/purchase POST
+// POST /api/purchases
 export async function POST(request: Request) {
     try {
-        // 1. Ambil dan validasi request body
         const body = await request.json();
 
         const validation = createPurchaseSchema.safeParse(body);
@@ -87,7 +86,7 @@ export async function POST(request: Request) {
 
         const data = validation.data;
 
-        // 2. Validasi tanggal
+        // Validasi tanggal
         const purchaseDate = new Date(
             `${data.purchaseDate}T00:00:00.000Z`
         );
@@ -105,7 +104,7 @@ export async function POST(request: Request) {
             );
         }
 
-        // 3. Pastikan tidak ada SKU duplikat
+        // Pastikan tidak ada SKU duplikat
         const productSkus = data.items.map((item) => item.productSku);
         const uniqueSkus = new Set(productSkus);
 
@@ -119,9 +118,8 @@ export async function POST(request: Request) {
             );
         }
 
-        // 4. Proses transaksi database
+        // Proses transaksi database
         const purchase = await prisma.$transaction(async (tx) => {
-
             // Cari supplier
             const supplier = await tx.supplier.findUnique({
                 where: {
@@ -142,7 +140,6 @@ export async function POST(request: Request) {
                 },
             });
 
-            // Pastikan semua produk tersedia dan aktif
             const productMap = new Map(
                 products.map((product) => [product.sku, product])
             );
@@ -155,7 +152,7 @@ export async function POST(request: Request) {
                 }
             }
 
-            // 5. Hitung subtotal dan total menggunakan Decimal
+            // Hitung subtotal dan total
             let totalAmount = new Prisma.Decimal(0);
 
             const purchaseItems = data.items.map((item) => {
@@ -176,7 +173,7 @@ export async function POST(request: Request) {
                 };
             });
 
-            // 6. Validasi pembayaran awal
+            // Validasi pembayaran awal
             const initialPayment = new Prisma.Decimal(
                 data.initialPayment
             );
@@ -185,7 +182,7 @@ export async function POST(request: Request) {
                 throw new Error("PAYMENT_EXCEEDS_TOTAL");
             }
 
-            // 7. Generate nomor invoice
+            // Generate nomor invoice
             const year = purchaseDate.getUTCFullYear();
             const month = String(
                 purchaseDate.getUTCMonth() + 1
@@ -214,8 +211,8 @@ export async function POST(request: Request) {
             const purchaseNumber =
                 `${prefix}${String(lastNumber + 1).padStart(4, "0")}`;
 
-            // 8. Simpan Purchase beserta item dan pembayaran awal
-            return await tx.purchase.create({
+            // Simpan Purchase beserta item dan pembayaran awal
+            const purchase = await tx.purchase.create({
                 data: {
                     purchaseNumber,
                     purchaseDate,
@@ -243,9 +240,49 @@ export async function POST(request: Request) {
                     payments: true,
                 },
             });
+
+            // Hitung sisa utang
+            const outstandingAmount = totalAmount.minus(initialPayment);
+            const zero = new Prisma.Decimal(0);
+
+            // Susun baris jurnal pembelian
+            const journalLines = [
+                {
+                    accountCode: "104",
+                    description: "Pembelian barang dagang",
+                    debit: totalAmount,
+                    credit: zero,
+                },
+                ...(initialPayment.greaterThan(0)
+                    ? [{
+                        accountCode: "101",
+                        description: "Pembayaran melalui kas",
+                        debit: zero,
+                        credit: initialPayment,
+                    }]
+                    : []),
+                ...(outstandingAmount.greaterThan(0)
+                    ? [{
+                        accountCode: "201",
+                        description: "Utang usaha",
+                        debit: zero,
+                        credit: outstandingAmount,
+                    }]
+                    : []),
+            ];
+
+            // Buat jurnal utama pembelian
+            await createJournalEntry(tx, {
+                journalDate: purchaseDate,
+                description: `Pembelian ${purchase.purchaseNumber}`,
+                sourceType: "PURCHASE",
+                sourceId: purchase.id,
+                lines: journalLines,
+            });
+
+            return purchase;
         });
 
-        // 9. Respons berhasil
         return Response.json(
             {
                 success: true,
@@ -256,50 +293,62 @@ export async function POST(request: Request) {
         );
 
     } catch (error) {
+        if (error instanceof Error) {
+            if (error.message === "SUPPLIER_NOT_FOUND") {
+                return Response.json(
+                    {
+                        success: false,
+                        message: "Supplier tidak ditemukan atau tidak aktif.",
+                    },
+                    { status: 404 }
+                );
+            }
 
-        // Supplier tidak ditemukan atau tidak aktif
-        if (
-            error instanceof Error &&
-            error.message === "SUPPLIER_NOT_FOUND"
-        ) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "Supplier tidak ditemukan atau tidak aktif.",
-                },
-                { status: 404 }
-            );
+            if (error.message === "PRODUCT_NOT_FOUND") {
+                return Response.json(
+                    {
+                        success: false,
+                        message: "Salah satu produk tidak ditemukan atau tidak aktif.",
+                    },
+                    { status: 404 }
+                );
+            }
+
+            if (error.message === "PAYMENT_EXCEEDS_TOTAL") {
+                return Response.json(
+                    {
+                        success: false,
+                        message: "Pembayaran awal tidak boleh melebihi total pembelian.",
+                    },
+                    { status: 400 }
+                );
+            }
+
+            if (error.message === "JOURNAL_ACCOUNT_NOT_FOUND_OR_INACTIVE") {
+                console.error("Purchase journal account error:", error);
+
+                return Response.json(
+                    {
+                        success: false,
+                        message: "Akun COA untuk jurnal pembelian tidak ditemukan atau tidak aktif.",
+                    },
+                    { status: 500 }
+                );
+            }
+
+            if (error.message === "INVALID_JOURNAL_BALANCE") {
+                console.error("Purchase journal balance error:", error);
+
+                return Response.json(
+                    {
+                        success: false,
+                        message: "Jurnal pembelian tidak seimbang.",
+                    },
+                    { status: 500 }
+                );
+            }
         }
 
-        // Produk tidak ditemukan atau tidak aktif
-        if (
-            error instanceof Error &&
-            error.message === "PRODUCT_NOT_FOUND"
-        ) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "Salah satu produk tidak ditemukan atau tidak aktif.",
-                },
-                { status: 404 }
-            );
-        }
-
-        // Pembayaran melebihi total pembelian
-        if (
-            error instanceof Error &&
-            error.message === "PAYMENT_EXCEEDS_TOTAL"
-        ) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "Pembayaran awal tidak boleh melebihi total pembelian.",
-                },
-                { status: 400 }
-            );
-        }
-
-        // Nomor invoice duplikat
         if (
             typeof error === "object" &&
             error !== null &&
@@ -309,7 +358,7 @@ export async function POST(request: Request) {
             return Response.json(
                 {
                     success: false,
-                    message: "Nomor invoice sudah digunakan. Silakan coba kembali.",
+                    message: "Nomor invoice atau jurnal sudah digunakan. Silakan coba kembali.",
                 },
                 { status: 409 }
             );
