@@ -58,3 +58,57 @@ model Customer {
   @@index([name])
   @@map("customers")
 }
+
+model Purchase {
+  id             String   @id @default(uuid()) @db.Uuid
+  purchaseNumber String   @unique @map("purchase_number") @db.VarChar(30)
+  purchaseDate   DateTime @map("purchase_date") @db.Date
+
+  supplierCode String @map("supplier_code") @db.VarChar(50)
+  supplierName String @map("supplier_name") @db.VarChar(255)
+
+  totalAmount Decimal @map("total_amount") @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  items    PurchaseItem[]
+  payments PurchasePayment[]
+
+  @@index([purchaseDate])
+  @@index([supplierCode])
+  @@map("purchases")
+}
+
+model PurchaseItem {
+  id         String @id @default(uuid()) @db.Uuid
+  purchaseId String @map("purchase_id") @db.Uuid
+
+  productSku  String  @map("product_sku") @db.VarChar(50)
+  productName String  @map("product_name") @db.VarChar(255)
+  unit        String  @db.VarChar(30)
+
+  quantity  Int
+  unitPrice Decimal @map("unit_price") @db.Decimal(18, 2)
+  subtotal  Decimal @db.Decimal(18, 2)
+
+  purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+
+  @@unique([purchaseId, productSku])
+  @@map("purchase_items")
+}
+
+model PurchasePayment {
+  id         String @id @default(uuid()) @db.Uuid
+  purchaseId String @map("purchase_id") @db.Uuid
+
+  paymentDate DateTime @map("payment_date") @db.Date
+  amount      Decimal  @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+
+  @@index([purchaseId])
+  @@map("purchase_payments")
+}
