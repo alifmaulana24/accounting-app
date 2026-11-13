@@ -12,6 +12,7 @@ datasource db {
   provider = "postgresql"
 }
 
+// Product Models
 
 model Product {
   sku       String   @id @db.VarChar(50)
@@ -27,6 +28,7 @@ model Product {
   @@map("products")
 }
 
+// Supplier Models
 
 model Supplier {
   supplierCode String   @id @map("supplier_code") @db.VarChar(50)
@@ -43,6 +45,7 @@ model Supplier {
   @@map("suppliers")
 }
 
+// Customer Models
 
 model Customer {
   customerCode String   @id @map("customer_code") @db.VarChar(50)
@@ -58,6 +61,8 @@ model Customer {
   @@index([name])
   @@map("customers")
 }
+
+// Sales Models
 
 model Purchase {
   id             String   @id @default(uuid()) @db.Uuid
@@ -113,7 +118,7 @@ model PurchasePayment {
   @@map("purchase_payments")
 }
 
-
+// Sales Models
 
 model Sale {
   id         String   @id @default(uuid()) @db.Uuid
@@ -167,4 +172,36 @@ model SalePayment {
 
   @@index([saleId])
   @@map("sale_payments")
+}
+
+// Chart Of Account Models
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum NormalBalance {
+  DEBIT
+  CREDIT
+}
+
+model Account {
+  id            String        @id @default(uuid()) @db.Uuid
+  code          String        @unique @db.VarChar(3)
+  name          String        @db.VarChar(100)
+  accountType   AccountType   @map("account_type")
+  normalBalance NormalBalance @map("normal_balance")
+
+  isSystem      Boolean       @default(false) @map("is_system")
+  isActive      Boolean       @default(true) @map("is_active")
+
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([name])
+  @@map("accounts")
 }

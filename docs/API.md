@@ -121,7 +121,7 @@ Purpose: delete a product by its unique SKU.
 Behavior:
 - Reads the SKU from the dynamic route parameter.
 - Deletes the product from the database using Prisma `prisma.product.delete()`.
-- Currently, deletion is direct without checking transaction or inventory references.
+- Currently, deletion is direct without checking transaction references.
 - Returns HTTP `200` when successful.
 - Returns HTTP `404` when the product is not found.
 - Returns HTTP `500` for unexpected server errors.

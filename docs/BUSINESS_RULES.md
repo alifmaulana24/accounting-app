@@ -7,9 +7,6 @@ marked as planned are not necessarily implemented yet.
 
 -   The initial system supports one business and one warehouse.
 -   Currency is IDR.
--   Negative stock is not allowed.
--   Product identity is managed in Master Produk; stock quantity and
-    value are managed by inventory records.
 -   Products are manually created. No product CSV/Excel import is
     planned for the initial version.
 
@@ -42,14 +39,10 @@ marked as planned are not necessarily implemented yet.
 Category and unit are entered manually as text. Separate category and
 unit master tables are not part of the current design.
 
-### Stock and product lifecycle
+### Product lifecycle
 
--   Do not add a stock quantity field to the Master Produk form.
--   New products begin with zero stock.
--   Stock changes must be recorded through inventory operations, not by
-    editing the product master.
 -   Product deletion: Products can be deleted directly via `DELETE /api/products/[sku]`.
-    In the current implementation, deletion does not check transaction or inventory references.
+    In the current implementation, deletion does not check transaction references.
 -   Use active/inactive status to control whether a product is available
     for new operations.
 
@@ -57,7 +50,7 @@ unit master tables are not part of the current design.
 
 SKU is currently the product primary key. Treat it as immutable through
 ordinary product update operations. Changing this decision requires
-reviewing all dependent foreign keys and transaction/inventory
+reviewing all dependent foreign keys and transaction
 references.
 
 ### Product update rules
@@ -133,8 +126,6 @@ references.
 
 -   Purchase transactions reference existing products and suppliers.
 -   A purchase receipt is recorded in full in the initial workflow.
--   Receiving purchased goods increases inventory and creates FIFO
-    inventory cost layers.
 -   Purchase payment may be full, partial, or unpaid.
 -   Payment records and their history remain attached to the originating
     purchase.
@@ -143,27 +134,9 @@ references.
 
 -   Sales transactions reference existing products and customers where
     applicable.
--   A sale reduces inventory and consumes FIFO layers.
--   The backend determines FIFO allocations and calculates COGS. The
-    frontend must not calculate or submit authoritative FIFO allocations
-    or COGS.
--   Sales must be rejected if available stock is insufficient.
 -   Sales payment may be full, partial, or unpaid.
 
-## 7. Inventory and FIFO
-
--   Inventory valuation uses FIFO (First In, First Out).
--   Each incoming stock event creates an inventory layer with quantity
-    and unit cost.
--   Outgoing stock consumes the oldest available layers first.
--   If multiple layers have the same effective ordering value, use a
-    deterministic tie-breaker.
--   Record stock movements for traceability.
--   Stock increases through adjustment require a unit cost so that a
-    FIFO layer can be created.
--   Stock decreases through adjustment consume existing FIFO layers.
-
-## 8. Payments and remaining transaction amounts
+## 7. Payments and remaining transaction amounts
 
 -   Payment records must be linked to their originating purchase or
     sales transaction.
@@ -175,7 +148,7 @@ references.
 -   Remaining amounts are tracked only on their originating transactions;
     they are not managed in a separate module.
 
-## 9. Journals
+## 8. Journals
 
 -   Relevant operational transactions generate journal entries.
 -   Manual journal entries are also supported by the planned General
@@ -185,23 +158,17 @@ references.
 -   Posted journal entries should not be silently edited. Corrections
     should use reversal entries.
 
-## 10. Cancellation and correction
+## 9. Cancellation and correction
 
 -   Preserve cancelled transactions for auditability.
--   Do not treat cancellation as merely changing a status if inventory,
-    payments, or journals have already been affected.
+-   Do not treat cancellation as merely changing a status if payments
+    or journals have already been affected.
 -   Cancellation must reverse the relevant effects correctly.
--   A sale cancellation should restore the quantities to the original
-    FIFO layers where feasible.
--   A purchase cancellation must be blocked if reversing it would cause
-    stock to become negative because the received goods have already
-    been consumed.
 -   Detailed refund/payment reversal behavior still requires an explicit
     design decision before implementing cancellation workflows.
 
-## 11. Important implementation boundary
+## 10. Important implementation boundary
 
 The frontend may collect user input and display calculated results, but
-business-critical calculations and validation (stock availability, FIFO
-allocation, COGS, balances, and journal generation) must be performed or
-verified on the server.
+business-critical calculations and validation (balances, and journal
+generation) must be performed or verified on the server.

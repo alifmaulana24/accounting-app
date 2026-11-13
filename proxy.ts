@@ -14,7 +14,6 @@ const PROTECTED_ROUTES = [
   "/pemasok",
   "/pembelian",
   "/penjualan",
-  "/inventory",
   "/pembayaran-pemasok",
   "/penerimaan-pelanggan",
   "/daftar-akun",

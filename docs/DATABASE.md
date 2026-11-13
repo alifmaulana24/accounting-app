@@ -46,34 +46,17 @@ from this example.
     validation layer.
 -   Product does not contain a stock quantity column.
 
-## 4. Planned inventory data model
-
-The intended FIFO design includes the following concepts. Names and
-exact columns must be confirmed against the actual Prisma schema before
-implementation:
-
--   `inventory_layers`: incoming stock quantities and unit costs.
--   `inventory_layer_allocations`: links outgoing transactions to the
-    FIFO layers they consume.
--   `stock_movements`: auditable record of stock increases and
-    decreases.
-
-These are architectural concepts, not a guarantee that all corresponding
-models have already been created.
-
-## 5. Data integrity
+## 4. Data integrity
 
 -   Enforce uniqueness and required fields at the database level
     wherever appropriate.
 -   Use foreign keys for relationships between products and dependent
-    transaction/inventory records.
+    transaction records.
 -   Use database transactions for operations that must succeed or fail
     together.
--   Sales stock allocation, COGS calculation, stock movement, and
-    related journal creation should be atomic.
 -   Never rely solely on frontend validation for data integrity.
 
-## 6. Schema change workflow
+## 5. Schema change workflow
 
 After an approved schema change:
 

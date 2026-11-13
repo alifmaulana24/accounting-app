@@ -2,11 +2,11 @@
 
 ## 1. Overview
 
-**Ledger** is a Purchasing, Sales, and Inventory Management System for a
+**Ledger** is a Purchasing and Sales Management System for a
 single retail pet-care business.
 
 The application focuses on operational business processes: product
-management, purchasing, sales, inventory, supplier/customer records,
+management, purchasing, sales, supplier/customer records,
 payment tracking, and basic journal recording. It is **not intended to
 be a full accounting system**.
 
@@ -14,8 +14,6 @@ be a full accounting system**.
 
 -   Centralize product, supplier, and customer master data.
 -   Record purchases and sales.
--   Track inventory quantities and stock movements.
--   Calculate inventory cost and cost of goods sold (COGS) using FIFO.
 -   Track purchase payments and their history on the originating
     transactions.
 -   Generate journal entries from relevant operational transactions.
@@ -45,7 +43,6 @@ as the source of truth.
 -   Dashboard
 -   Purchasing
 -   Sales
--   Inventory management
 -   Product master
 -   Supplier master
 -   Customer master
@@ -55,6 +52,8 @@ as the source of truth.
 
 ### Not included in the initial version
 
+-   Inventory management (removed from the application scope by
+    explicit project decision)
 -   Full General Ledger, Trial Balance, Income Statement, or Balance
     Sheet modules
 -   Marketplace integrations
@@ -69,9 +68,6 @@ after an explicit project decision.
 -   One business and one warehouse.
 -   Currency: Indonesian Rupiah (IDR).
 -   Products are created manually through Master Produk.
--   New products begin with zero stock.
--   No negative stock is allowed.
--   Inventory valuation uses FIFO.
 -   A purchase receipt is recorded as received in full in the initial
     workflow.
 

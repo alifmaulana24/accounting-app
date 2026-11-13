@@ -9,7 +9,6 @@ import {
   Truck,
   ShoppingCart,
   TrendingUp,
-  Warehouse,
   BookOpen,
   FileText,
   BookMarked,
@@ -55,7 +54,6 @@ const navGroups = [
     items: [
       { title: "Pembelian", href: "/pembelian", icon: ShoppingCart },
       { title: "Penjualan", href: "/penjualan", icon: TrendingUp },
-      { title: "Inventory", href: "/inventory", icon: Warehouse },
     ],
   },
   {
