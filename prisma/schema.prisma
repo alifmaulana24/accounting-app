@@ -84,13 +84,13 @@ model PurchaseItem {
   id         String @id @default(uuid()) @db.Uuid
   purchaseId String @map("purchase_id") @db.Uuid
 
-  productSku  String  @map("product_sku") @db.VarChar(50)
-  productName String  @map("product_name") @db.VarChar(255)
-  unit        String  @db.VarChar(30)
+  productSku  String @map("product_sku") @db.VarChar(50)
+  productName String @map("product_name") @db.VarChar(255)
+  unit        String @db.VarChar(30)
 
   quantity  Int
   unitPrice Decimal @map("unit_price") @db.Decimal(18, 2)
-  subtotal  Decimal @db.Decimal(18, 2)
+  subtotal   Decimal @db.Decimal(18, 2)
 
   purchase Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
 
