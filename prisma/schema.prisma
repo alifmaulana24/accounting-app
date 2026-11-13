@@ -202,6 +202,54 @@ model Account {
   createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt     DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
+  journalLines JournalLine[]
+
   @@index([name])
   @@map("accounts")
+
+}
+
+enum JournalSource {
+  MANUAL
+  PURCHASE
+  PURCHASE_PAYMENT
+  SALE
+  SALE_PAYMENT
+}
+
+model JournalEntry {
+  id            String        @id @default(uuid()) @db.Uuid
+  journalNumber String        @unique @map("journal_number") @db.VarChar(30)
+  journalDate   DateTime      @map("journal_date") @db.Date
+  description   String        @db.VarChar(255)
+
+  sourceType JournalSource @map("source_type")
+  sourceId   String?       @map("source_id") @db.Uuid
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  lines JournalLine[]
+
+  @@unique([sourceType, sourceId])
+  @@index([journalDate])
+  @@map("journal_entries")
+}
+
+model JournalLine {
+  id             String @id @default(uuid()) @db.Uuid
+  journalEntryId String @map("journal_entry_id") @db.Uuid
+  accountId      String @map("account_id") @db.Uuid
+
+  lineNumber  Int     @map("line_number")
+  description String? @db.VarChar(255)
+
+  debit  Decimal @default(0) @db.Decimal(18, 2)
+  credit Decimal @default(0) @db.Decimal(18, 2)
+
+  journalEntry JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Restrict)
+  account      Account      @relation(fields: [accountId], references: [id], onDelete: Restrict)
+
+  @@unique([journalEntryId, lineNumber])
+  @@index([accountId])
+  @@map("journal_lines")
 }

@@ -30,7 +30,7 @@ const routeTitles: Record<string, string> = {
   "/pembelian": "Pembelian",
   "/penjualan": "Penjualan",
   "/daftar-akun": "Daftar Akun",
-  "/jurnal-umum": "Jurnal Umum",
+  "/jurnal-umum": "General Journal",
   "/buku-besar": "Buku Besar",
 };
 
@@ -41,7 +41,9 @@ interface AppHeaderProps {
 
 export function AppHeader({ pageTitle, userId }: AppHeaderProps) {
   const pathname = usePathname();
-  const currentTitle = routeTitles[pathname] ?? pageTitle;
+  const currentTitle = pathname.startsWith("/jurnal-umum/")
+    ? "General Journal"
+    : routeTitles[pathname] ?? pageTitle;
   const [isPending, startTransition] = useTransition();
 
   const handleLogout = () => {

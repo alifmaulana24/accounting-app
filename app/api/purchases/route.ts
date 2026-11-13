@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { createPurchaseSchema } from "@/lib/validations/purchase";
+import { createJournalEntry } from "@/lib/journal";
 
 // /api/purchase GET
 export async function GET() {

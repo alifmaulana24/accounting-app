@@ -161,12 +161,12 @@ references.
 ## 9. Journals
 
 -   Relevant operational transactions generate journal entries.
--   Manual journal entries are also supported by the planned General
-    Journal module.
+-   Manual journal entries can be recorded through the General Journal
+    module.
 -   A simple Chart of Accounts is required for manual journal entries
     and journal classification.
--   Posted journal entries should not be silently edited. Corrections
-    should use reversal entries.
+-   Each saved journal is final and cannot be edited or deleted through
+    the General Journal interface. Corrections should use reversal entries.
 
 ## 10. Cancellation and correction
 

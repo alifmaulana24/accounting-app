@@ -556,3 +556,33 @@ HTTP `409`.
 Deletes an additional account. System accounts cannot be deleted
 (HTTP `403`); missing accounts return HTTP `404`. A foreign-key
 constraint conflict returns HTTP `409`.
+
+## 11. General Journal endpoints
+
+### `GET /api/journals`
+
+Returns up to 100 journal summaries ordered by journal date and creation
+time, newest first. Each item includes its ID, journal number, date,
+description, source type and ID, creation time, total debit, and total
+credit. Totals are returned as numeric strings under `data`. Errors
+return a `message`.
+
+### `GET /api/journals/[id]`
+
+Returns a journal under `data`, including its totals and ordered journal
+lines. Each line contains its debit, credit, description, and account
+details (`id`, `code`, `name`, `accountType`, and `normalBalance`).
+Returns HTTP `404` when the journal does not exist.
+
+### `POST /api/journals`
+
+Creates and saves a manual journal. The request accepts `journalDate`
+(`YYYY-MM-DD`), a required description (maximum 255 characters), and at
+least two lines. Each line requires an active `accountId`, may include a
+description (maximum 255 characters), and must have either a positive
+debit or a positive credit, but not both. Debit and credit totals must
+balance. The backend generates the journal number and stores the source
+type as `MANUAL`; clients must not send calculated or server-owned
+fields. Successful responses return HTTP `201` with `{ "message": "...",
+"data": {} }`. Invalid input or an unavailable account returns HTTP
+`400`.
