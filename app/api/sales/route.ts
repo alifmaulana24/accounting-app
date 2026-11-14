@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createSaleSchema } from "@/lib/validations/sale";
+import { createJournalEntry } from "@/lib/journal";
 
 // POST: Create Sale
 export async function POST(request: NextRequest) {
@@ -33,7 +34,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          message: "Produk yang sama tidak boleh dimasukkan lebih dari satu kali.",
+          message:
+            "Produk yang sama tidak boleh dimasukkan lebih dari satu kali.",
         },
         { status: 400 }
       );
@@ -103,9 +105,15 @@ export async function POST(request: NextRequest) {
       // Validate initial payment
       const initialPayment = new Prisma.Decimal(data.initialPayment);
 
+      if (initialPayment.isNegative()) {
+        throw new Error("INVALID_INITIAL_PAYMENT");
+      }
+
       if (initialPayment.gt(totalAmount)) {
         throw new Error("PAYMENT_EXCEEDS_TOTAL");
       }
+
+      const outstandingAmount = totalAmount.sub(initialPayment);
 
       // Generate sale number: SAL-YYYYMM-NNNN
       const yearMonth = data.saleDate.slice(0, 7).replace("-", "");
@@ -159,6 +167,45 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      // Create main journal for sale
+      const journalLines = [];
+
+      // Debit Cash for initial payment
+      if (initialPayment.gt(0)) {
+        journalLines.push({
+          accountCode: "101",
+          description: "Penerimaan pembayaran penjualan",
+          debit: initialPayment,
+          credit: new Prisma.Decimal(0),
+        });
+      }
+
+      // Debit Accounts Receivable for outstanding amount
+      if (outstandingAmount.gt(0)) {
+        journalLines.push({
+          accountCode: "103",
+          description: "Piutang usaha penjualan",
+          debit: outstandingAmount,
+          credit: new Prisma.Decimal(0),
+        });
+      }
+
+      // Credit Sales
+      journalLines.push({
+        accountCode: "401",
+        description: "Penjualan",
+        debit: new Prisma.Decimal(0),
+        credit: totalAmount,
+      });
+
+      await createJournalEntry(tx, {
+        journalDate: saleDate,
+        description: `Penjualan ${saleNumber}`,
+        sourceType: "SALE",
+        sourceId: sale.id,
+        lines: journalLines,
+      });
+
       return sale;
     });
 
@@ -176,8 +223,13 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error) {
       const errorMessages: Record<string, string> = {
         CUSTOMER_NOT_FOUND: "Customer tidak ditemukan atau tidak aktif.",
-        PRODUCT_NOT_FOUND: "Satu atau lebih produk tidak ditemukan atau tidak aktif.",
+        PRODUCT_NOT_FOUND:
+          "Satu atau lebih produk tidak ditemukan atau tidak aktif.",
         PAYMENT_EXCEEDS_TOTAL: "Pembayaran melebihi total penjualan.",
+        INVALID_INITIAL_PAYMENT: "Pembayaran awal tidak boleh negatif.",
+        ACCOUNT_NOT_FOUND: "Akun COA untuk jurnal tidak ditemukan.",
+        ACCOUNT_INACTIVE: "Akun COA untuk jurnal tidak aktif.",
+        INVALID_JOURNAL_BALANCE: "Jurnal tidak seimbang.",
       };
 
       if (errorMessages[error.message]) {

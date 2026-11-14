@@ -50,13 +50,13 @@ as the source of truth.
 -   Operational transaction history
 -   Chart of Accounts (COA)
 -   General Journal
+-   Buku Besar (General Ledger report)
 
 ### Not included in the initial version
 
 -   Inventory management (removed from the application scope by
     explicit project decision)
--   Full General Ledger, Trial Balance, Income Statement, or Balance
-    Sheet modules
+-   Trial Balance, Income Statement, or Balance Sheet modules
 -   Marketplace integrations
 -   Payment gateway integrations
 -   Tax and return workflows

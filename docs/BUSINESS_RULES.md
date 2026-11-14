@@ -167,6 +167,9 @@ references.
     and journal classification.
 -   Each saved journal is final and cannot be edited or deleted through
     the General Journal interface. Corrections should use reversal entries.
+-   Dashboard balances for accounts `101`, `102`, `103`, `104`, `201`, and
+    `401` are derived from all saved journal lines using each account's
+    normal balance, not from Purchase or Sales records.
 
 ## 10. Cancellation and correction
 

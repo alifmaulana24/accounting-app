@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ledger — Aplikasi Akuntansi",
+  title: "Ledger — Purchase and Sales",
   description: "Aplikasi akuntansi Ledger",
 };
 
@@ -31,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         geistSans.variable,
         geistMono.variable,
         "font-sans",
-        inter.variable
+        inter.variable,
       )}
     >
       <body className="min-h-full flex flex-col">{children}</body>

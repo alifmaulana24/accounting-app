@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { JournalTable } from "@/components/journals/journal-table";
 import type {
   GetJournalsResponse,
+  JournalCategory,
   JournalApiErrorResponse,
   JournalSummary,
 } from "@/types/journal";
@@ -15,33 +16,50 @@ export function JournalPageClient() {
   const [journals, setJournals] = React.useState<JournalSummary[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [category, setCategory] = React.useState<JournalCategory>("ALL");
+  const requestId = React.useRef(0);
 
-  const fetchJournals = React.useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const response = await fetch("/api/journals", { cache: "no-store" });
-      const json: GetJournalsResponse | JournalApiErrorResponse =
-        await response.json();
-
-      if (!response.ok || !("data" in json) || !Array.isArray(json.data)) {
-        setError(
-          "message" in json ? json.message : "Gagal memuat data jurnal.",
+  const fetchJournals = React.useCallback(
+    async (selectedCategory: JournalCategory) => {
+      const currentRequestId = ++requestId.current;
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(
+          `/api/journals?category=${selectedCategory}`,
+          { cache: "no-store" },
         );
-        return;
-      }
+        const json: GetJournalsResponse | JournalApiErrorResponse =
+          await response.json();
 
-      setJournals(json.data);
-    } catch {
-      setError("Gagal terhubung ke server. Silakan coba lagi.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        if (!response.ok || !("data" in json) || !Array.isArray(json.data)) {
+          if (currentRequestId === requestId.current) {
+            setError(
+              "message" in json ? json.message : "Gagal memuat data jurnal.",
+            );
+          }
+          return;
+        }
+
+        if (currentRequestId === requestId.current) {
+          setJournals(json.data);
+        }
+      } catch {
+        if (currentRequestId === requestId.current) {
+          setError("Gagal terhubung ke server. Silakan coba lagi.");
+        }
+      } finally {
+        if (currentRequestId === requestId.current) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [],
+  );
 
   React.useEffect(() => {
-    void Promise.resolve().then(fetchJournals);
-  }, [fetchJournals]);
+    void Promise.resolve().then(() => fetchJournals(category));
+  }, [category, fetchJournals]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -68,7 +86,9 @@ export function JournalPageClient() {
         journals={journals}
         isLoading={isLoading}
         error={error}
-        onRetry={fetchJournals}
+        category={category}
+        onCategoryChange={setCategory}
+        onRetry={() => fetchJournals(category)}
       />
     </div>
   );

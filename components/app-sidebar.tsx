@@ -82,7 +82,7 @@ export function AppSidebar() {
             A
           </div>
           <span className="font-semibold text-sm text-sidebar-foreground truncate">
-            Accounting App
+            Purchase and Sales
           </span>
         </div>
       </SidebarHeader>

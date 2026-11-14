@@ -4,10 +4,47 @@ import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createManualJournalSchema } from "@/lib/validations/journal";
 
-// GET: Mengambil daftar jurnal
-export async function GET() {
+// GET: Mengambil daftar jurnal dengan filter kategori
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get("category");
+
+    // Validasi kategori filter
+    const allowedCategories = ["MANUAL", "PURCHASE", "SALE"];
+
+    if (
+      category &&
+      category !== "ALL" &&
+      !allowedCategories.includes(category)
+    ) {
+      return NextResponse.json(
+        { message: "Kategori jurnal tidak valid" },
+        { status: 400 }
+      );
+    }
+
+    // Mapping kategori ke sourceType
+    let sourceTypes:
+      | ("MANUAL" | "PURCHASE" | "PURCHASE_PAYMENT" | "SALE" | "SALE_PAYMENT")[]
+      | undefined;
+
+    if (category === "MANUAL") {
+      sourceTypes = ["MANUAL"];
+    } else if (category === "PURCHASE") {
+      sourceTypes = ["PURCHASE", "PURCHASE_PAYMENT"];
+    } else if (category === "SALE") {
+      sourceTypes = ["SALE", "SALE_PAYMENT"];
+    }
+
     const journals = await prisma.journalEntry.findMany({
+      where: sourceTypes
+        ? {
+            sourceType: {
+              in: sourceTypes,
+            },
+          }
+        : undefined,
       orderBy: [
         { journalDate: "desc" },
         { createdAt: "desc" },
@@ -85,7 +122,6 @@ export async function POST(request: NextRequest) {
     const prefix = `JRN-${yearMonth}-`;
 
     const journal = await prisma.$transaction(async (tx) => {
-
       // Memeriksa seluruh akun yang digunakan
       const accountIds = [
         ...new Set(data.lines.map((line) => line.accountId)),

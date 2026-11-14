@@ -1,3 +1,7 @@
+export const JOURNAL_CATEGORIES = ["ALL", "MANUAL", "PURCHASE", "SALE"] as const;
+
+export type JournalCategory = (typeof JOURNAL_CATEGORIES)[number];
+
 export interface JournalSummary {
   id: string;
   journalNumber: string;

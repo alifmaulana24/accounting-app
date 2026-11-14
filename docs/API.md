@@ -561,11 +561,15 @@ constraint conflict returns HTTP `409`.
 
 ### `GET /api/journals`
 
-Returns up to 100 journal summaries ordered by journal date and creation
-time, newest first. Each item includes its ID, journal number, date,
-description, source type and ID, creation time, total debit, and total
-credit. Totals are returned as numeric strings under `data`. Errors
-return a `message`.
+Accepts an optional `category` query parameter: `ALL` (default) returns
+all journals, `MANUAL` returns manual journals, `PURCHASE` returns purchase
+journals and their subsequent payments, and `SALE` returns sales journals
+and their subsequent payments. Returns up to 100 journal summaries ordered
+by journal date and creation time, newest first. Each item includes its ID,
+journal number, date, description, source type and ID, creation time, total
+debit, and total credit. Totals are returned as numeric strings under
+`data`. Invalid categories return HTTP `400`; other errors return a
+`message`.
 
 ### `GET /api/journals/[id]`
 
@@ -586,3 +590,27 @@ type as `MANUAL`; clients must not send calculated or server-owned
 fields. Successful responses return HTTP `201` with `{ "message": "...",
 "data": {} }`. Invalid input or an unavailable account returns HTTP
 `400`.
+
+## 12. General Ledger endpoint
+
+### `GET /api/general-ledger`
+
+Requires `accountId`, `startDate`, and `endDate` query parameters. Dates
+must use `YYYY-MM-DD`; the start date cannot be after the end date.
+Returns the selected account, period, opening balance, total debit, total
+credit, closing balance, and ordered transactions under `data`. Monetary
+values are numeric strings. Each transaction includes its journal entry ID
+and number, date, description, debit, credit, and backend-calculated
+`runningBalance`. Invalid input returns HTTP `400`; a missing account
+returns HTTP `404`.
+
+## 13. Dashboard endpoint
+
+### `GET /api/dashboard`
+
+Returns balances for the configured COA accounts with codes `101`, `102`,
+`103`, `104`, `201`, and `401`, calculated from all journal lines using
+each account's normal balance. Accounts without journal lines return a
+zero balance. Also returns up to five recent journals, ordered by journal
+date and creation time descending, with debit and credit totals. Monetary
+values are numeric strings under `data`.

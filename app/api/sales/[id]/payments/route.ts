@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { createSalePaymentSchema } from "@/lib/validations/sale";
+import { createJournalEntry } from "@/lib/journal";
 
 type RouteContext = {
   params: Promise<{
@@ -17,7 +18,7 @@ export async function POST(
   try {
     const { id } = await params;
 
-    // 1. Validasi request body
+    // 1. Validate request body
     const body = await request.json();
     const validation = createSalePaymentSchema.safeParse(body);
 
@@ -33,9 +34,9 @@ export async function POST(
 
     const data = validation.data;
 
-    // 2. Proses pembayaran dalam transaksi database
+    // 2. Process payment in database transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Cari transaksi penjualan
+      // Find sale transaction
       const sale = await tx.sale.findUnique({
         where: { id },
         include: {
@@ -47,34 +48,62 @@ export async function POST(
         throw new Error("SALE_NOT_FOUND");
       }
 
-      // Hitung total pembayaran sebelumnya
+      // Calculate previous payments
       const totalPaid = sale.payments.reduce(
         (total, payment) => total.add(payment.amount),
         new Prisma.Decimal(0)
       );
 
-      // Hitung sisa tagihan
+      // Calculate outstanding amount
       const outstandingAmount = sale.totalAmount.minus(totalPaid);
 
-      // Pastikan pembayaran tidak melebihi sisa tagihan
+      // Validate payment amount
       const paymentAmount = new Prisma.Decimal(data.amount);
+
+      if (!paymentAmount.greaterThan(0)) {
+        throw new Error("INVALID_PAYMENT_AMOUNT");
+      }
 
       if (paymentAmount.greaterThan(outstandingAmount)) {
         throw new Error("PAYMENT_EXCEEDS_OUTSTANDING");
       }
 
-      // Simpan pembayaran
+      const paymentDate = new Date(
+        `${data.paymentDate}T00:00:00.000Z`
+      );
+
+      // Save payment
       const payment = await tx.salePayment.create({
         data: {
           saleId: id,
-          paymentDate: new Date(
-            `${data.paymentDate}T00:00:00.000Z`
-          ),
+          paymentDate,
           amount: paymentAmount,
         },
       });
 
-      // Hitung total pembayaran setelah pembayaran baru
+      // Create separate journal for subsequent payment
+      await createJournalEntry(tx, {
+        journalDate: paymentDate,
+        description: `Pembayaran penjualan ${sale.saleNumber}`,
+        sourceType: "SALE_PAYMENT",
+        sourceId: payment.id,
+        lines: [
+          {
+            accountCode: "101",
+            description: "Penerimaan pembayaran penjualan",
+            debit: paymentAmount,
+            credit: new Prisma.Decimal(0),
+          },
+          {
+            accountCode: "103",
+            description: "Pengurangan piutang usaha",
+            debit: new Prisma.Decimal(0),
+            credit: paymentAmount,
+          },
+        ],
+      });
+
+      // Calculate payment status after new payment
       const newTotalPaid = totalPaid.add(paymentAmount);
       const newOutstandingAmount =
         sale.totalAmount.minus(newTotalPaid);
@@ -83,8 +112,6 @@ export async function POST(
 
       if (newOutstandingAmount.isZero()) {
         paymentStatus = "Lunas";
-      } else if (newTotalPaid.isZero()) {
-        paymentStatus = "Belum Dibayar";
       } else {
         paymentStatus = "Sebagian";
       }
@@ -97,7 +124,7 @@ export async function POST(
       };
     });
 
-    // 3. Response berhasil
+    // 3. Success response
     return NextResponse.json(
       {
         message: "Pembayaran penjualan berhasil ditambahkan",
@@ -119,6 +146,24 @@ export async function POST(
       if (error.message === "PAYMENT_EXCEEDS_OUTSTANDING") {
         return NextResponse.json(
           { message: "Pembayaran melebihi sisa tagihan" },
+          { status: 400 }
+        );
+      }
+
+      if (error.message === "INVALID_PAYMENT_AMOUNT") {
+        return NextResponse.json(
+          { message: "Jumlah pembayaran harus lebih dari nol" },
+          { status: 400 }
+        );
+      }
+
+      if (
+        error.message === "ACCOUNT_NOT_FOUND" ||
+        error.message === "ACCOUNT_INACTIVE" ||
+        error.message === "INVALID_JOURNAL_BALANCE"
+      ) {
+        return NextResponse.json(
+          { message: "Gagal membuat jurnal pembayaran penjualan." },
           { status: 400 }
         );
       }

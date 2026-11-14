@@ -5,29 +5,52 @@ import Link from "next/link";
 import {
   AlertCircle,
   CalendarDays,
+  ChevronDown,
   ClipboardList,
   Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   formatJournalDate,
   formatRupiah,
 } from "@/components/journals/journal-format";
-import type { JournalSummary } from "@/types/journal";
+import {
+  JOURNAL_CATEGORIES,
+  type JournalCategory,
+  type JournalSummary,
+} from "@/types/journal";
 
 interface JournalTableProps {
   journals: JournalSummary[];
   isLoading: boolean;
   error: string | null;
+  category: JournalCategory;
+  onCategoryChange: (category: JournalCategory) => void;
   onRetry: () => void;
 }
+
+const CATEGORY_LABELS: Record<JournalCategory, string> = {
+  ALL: "Semua Kategori",
+  MANUAL: "Manual",
+  PURCHASE: "Purchase",
+  SALE: "Sales",
+};
 
 export function JournalTable({
   journals,
   isLoading,
   error,
+  category,
+  onCategoryChange,
   onRetry,
 }: JournalTableProps) {
   const [search, setSearch] = React.useState("");
@@ -51,7 +74,7 @@ export function JournalTable({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-2 sm:grid-cols-[minmax(220px,1fr)_minmax(170px,220px)_minmax(170px,220px)]">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(220px,1fr)_minmax(170px,220px)_minmax(170px,220px)_minmax(170px,220px)]">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -84,6 +107,38 @@ export function JournalTable({
             className="border-0 px-0 shadow-none focus-visible:ring-0"
           />
         </label>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                type="button"
+                variant="outline"
+                aria-label="Filter kategori jurnal"
+                className="w-full justify-between gap-1.5 font-normal"
+              >
+                {CATEGORY_LABELS[category]}
+                <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="start">
+            <DropdownMenuRadioGroup
+              value={category}
+              onValueChange={(value) => {
+                const selectedCategory = JOURNAL_CATEGORIES.find(
+                  (option) => option === value,
+                );
+                if (selectedCategory) onCategoryChange(selectedCategory);
+              }}
+            >
+              {JOURNAL_CATEGORIES.map((option) => (
+                <DropdownMenuRadioItem key={option} value={option}>
+                  {CATEGORY_LABELS[option]}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {isLoading ? (
@@ -121,9 +176,15 @@ export function JournalTable({
         <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-12 text-center">
           <ClipboardList className="size-8 text-muted-foreground" />
           <div>
-            <p className="text-sm font-medium">Belum ada jurnal</p>
+            <p className="text-sm font-medium">
+              {category === "ALL"
+                ? "Belum ada jurnal"
+                : `Tidak ada jurnal kategori ${CATEGORY_LABELS[category]}`}
+            </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Jurnal yang tercatat akan tampil di sini.
+              {category === "ALL"
+                ? "Jurnal yang tercatat akan tampil di sini."
+                : "Jurnal untuk kategori ini akan tampil di sini."}
             </p>
           </div>
         </div>
