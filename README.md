@@ -1,36 +1,87 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# P&S (Purchase & Sales)
 
-## Getting Started
+### Gambaran Umum Aplikasi
 
-First, run the development server:
+## 1. Apa itu P&S?
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+P&S adalah aplikasi pencatatan pembelian dan penjualan yang dirancang untuk membantu bisnis mengelola transaksi serta memantau kondisi keuangannya dalam satu sistem.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Aplikasi ini menghubungkan data produk, pemasok, pelanggan, pembelian, dan penjualan dengan pencatatan akuntansi secara otomatis.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Tujuan utamanya adalah membuat proses pencatatan transaksi lebih terstruktur, mengurangi pencatatan berulang, dan mempermudah pemantauan aktivitas keuangan bisnis.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 2. Apa saja yang dapat dilakukan?
 
-## Learn More
+**A. Mengelola Data Master**
 
-To learn more about Next.js, take a look at the following resources:
+Sebagai tempat penyimpanan data utama yang digunakan dalam transaksi.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Produk: menyimpan informasi barang yang dijual atau dibeli.
+- Supplier: menyimpan informasi pemasok barang.
+- Customer: menyimpan informasi pelanggan.
+- Daftar Akun: mengelompokkan transaksi berdasarkan jenis akun akuntansi.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+**B. Mencatat Pembelian**
 
-## Deploy on Vercel
+Digunakan untuk mencatat pembelian barang dari supplier.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Informasi yang dicatat meliputi:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Supplier.
+- Tanggal dan nomor transaksi.
+- Produk dan jumlah pembelian.
+- Harga pembelian.
+- Total transaksi.
+- Pembayaran dan sisa utang.
+
+**C. Mencatat Penjualan**
+
+Digunakan untuk mencatat penjualan kepada pelanggan.
+
+Informasi yang dicatat meliputi:
+
+- Customer.
+- Tanggal dan nomor transaksi.
+- Produk dan jumlah penjualan.
+- Harga jual.
+- Total transaksi.
+- Pembayaran dan sisa piutang.
+
+**D. Pencatatan Akuntansi Otomatis**
+
+Setiap transaksi pembelian dan penjualan yang disimpan akan menghasilkan pencatatan jurnal secara otomatis.
+
+Pembayaran berikutnya juga akan menghasilkan jurnal tersendiri.
+
+Selain itu, tersedia pencatatan jurnal manual untuk transaksi atau penyesuaian yang belum berasal dari modul pembelian dan penjualan.
+
+**E. Buku Besar**
+
+Buku Besar digunakan untuk melihat pergerakan setiap akun berdasarkan transaksi yang sudah dicatat.
+
+Pengguna dapat melihat:
+
+- Saldo awal.
+- Total debit dan kredit.
+- Riwayat transaksi.
+- Saldo akhir.
+
+**F. Dashboard**
+
+Dashboard menyajikan ringkasan informasi keuangan agar pengguna dapat melihat kondisi pencatatan secara lebih cepat.
+
+Informasi yang ditampilkan mencakup saldo beberapa akun utama dan jurnal terbaru.
+
+## 3. Bagaimana alur kerja aplikasi?
+
+Alur penggunaan P&S secara sederhana:
+
+1. **Masukkan data utama:** pengguna mengisi data produk, supplier, customer, dan daftar akun.
+2. **Catat transaksi:** pengguna memasukkan transaksi pembelian atau penjualan.
+3. **Catat pembayaran:** pengguna dapat mencatat pembayaran langsung maupun pembayaran susulan.
+4. **Pencatatan otomatis:** sistem membentuk jurnal berdasarkan transaksi dan pembayaran.
+5. **Pantau hasil:** pengguna melihat riwayat pencatatan melalui Jurnal Umum, Buku Besar, dan Dashboard.
+
+## 4. Gambaran Alur Sistem
+
+Data Master → Pembelian / Penjualan → Pembayaran → Jurnal Umum → Buku Besar → Dashboard.
